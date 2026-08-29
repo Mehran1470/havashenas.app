@@ -16,6 +16,20 @@ jobs:
       - run: npx cap add android
       - run: npx cap sync android
       - run: npx @capacitor/assets generate --android
+      - name: Add weather widget files
+        run: |
+          mkdir -p android/app/src/main/java/com/havashenas/hormozgan
+          cp widget/WeatherWidgetProvider.java android/app/src/main/java/com/havashenas/hormozgan/WeatherWidgetProvider.java
+          cp widget/weather_widget_layout.xml android/app/src/main/res/layout/weather_widget_layout.xml
+          cp widget/widget_background.xml android/app/src/main/res/drawable/widget_background.xml
+          mkdir -p android/app/src/main/res/xml
+          cp widget/weather_widget_info.xml android/app/src/main/res/xml/weather_widget_info.xml
+          python3 -c "
+          content = open('android/app/src/main/AndroidManifest.xml').read()
+          receiver = open('widget/manifest_receiver.xml').read()
+          content = content.replace('</application>', receiver + '\n    </application>')
+          open('android/app/src/main/AndroidManifest.xml', 'w').write(content)
+          "
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
