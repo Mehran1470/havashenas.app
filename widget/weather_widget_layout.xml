@@ -45,6 +45,7 @@
         android:textSize="13sp" />
 
     <LinearLayout
+        android:id="@+id/widget_stats_row"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -69,5 +70,14 @@
             android:textSize="11sp" />
 
     </LinearLayout>
+
+    <TextView
+        android:id="@+id/widget_tide"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="—"
+        android:textColor="#1E2A4A"
+        android:textSize="11sp" />
 
 </LinearLayout>
