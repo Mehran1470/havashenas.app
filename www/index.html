@@ -32,6 +32,28 @@ header{padding:28px 0 16px;display:flex;justify-content:space-between;align-item
 select{appearance:none;-webkit-appearance:none;background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);padding:12px 40px 12px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;outline:none;backdrop-filter:blur(12px);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffffaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 14px center;transition:all .3s ease}
 select:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
 select option{background:#0a1628;color:#fff;font-family:inherit}
+  .settings-btn{width:44px;height:44px;border-radius:14px;background:var(--glass-bg);border:1px solid var(--glass-border);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);transition:all .3s ease}
+.settings-btn:hover{background:rgba(255,255,255,.12);transform:rotate(30deg)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-panel{background:#0e1c30;border:1px solid var(--glass-border);border-radius:var(--radius);padding:26px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-title{font-size:19px;font-weight:800;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:rgba(255,255,255,.08);border:1px solid var(--glass-border);width:32px;height:32px;border-radius:50%;color:#fff;font-size:16px;cursor:pointer}
+.settings-group{margin-bottom:22px}
+.settings-group-title{font-size:13px;color:var(--text-dim);font-weight:700;margin-bottom:10px}
+.theme-options{display:flex;gap:10px}
+.theme-swatch{flex:1;height:56px;border-radius:14px;cursor:pointer;border:2px solid transparent;transition:all .2s ease;position:relative}
+.theme-swatch.active{border-color:#fff}
+.theme-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:900;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--glass-border)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row span{font-size:14px;font-weight:500}
+.toggle-switch{position:relative;width:46px;height:26px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:rgba(255,255,255,.15);border-radius:20px;cursor:pointer;transition:.3s}
+.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.toggle-switch input:checked+.toggle-slider{background:var(--accent)}
+.toggle-switch input:checked+.toggle-slider::before{transform:translateX(-20px)}
 
 .hero{position:relative;background:linear-gradient(135deg,var(--glass-bg),rgba(255,255,255,0.03));border:1px solid var(--glass-border);border-radius:var(--radius);padding:32px;margin-top:8px;backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;animation:fadeInUp .8s ease-out .1s both}
 .hero::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:radial-gradient(circle,rgba(79,172,254,.15),transparent 70%);pointer-events:none}
@@ -190,6 +212,7 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
       <div class="logo-sub">پیش‌بینی لحظه‌ای و دقیق</div>
     </div>
   </div>
+  <button id="settingsBtn" class="settings-btn" onclick="openSettings()">⚙️</button>
   <select id="citySelect">
     <option value="بندرعباس">بندرعباس</option>
     <option value="هرمز">هرمز</option>
@@ -320,6 +343,32 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 
 <footer><div style="opacity:.6">داده‌ها از Open-Meteo & Windy</div></footer>
 </div>
+  <div class="modal-overlay" id="settingsModal">
+  <div class="modal-panel">
+    <div class="modal-title">تنظیمات ویجت و نوتیفیکیشن <button class="modal-close" onclick="closeSettings()">×</button></div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">🎨 رنگ ویجت</div>
+      <div class="theme-options" id="themeOptions">
+        <div class="theme-swatch" data-theme="blue" style="background:linear-gradient(135deg,#BFE0F5,#5FA0D4)"></div>
+        <div class="theme-swatch" data-theme="dark" style="background:linear-gradient(135deg,#1c2b4f,#0a1628)"></div>
+        <div class="theme-swatch" data-theme="sunset" style="background:linear-gradient(135deg,#ffb37a,#ff6f6f)"></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">📊 نمایش اطلاعات در ویجت</div>
+      <div class="toggle-row"><span>رطوبت</span><label class="toggle-switch"><input type="checkbox" id="toggleHumidity"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span>باد</span><label class="toggle-switch"><input type="checkbox" id="toggleWind"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span>جزر و مد</span><label class="toggle-switch"><input type="checkbox" id="toggleTide"><span class="toggle-slider"></span></label></div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">🔔 نوتیفیکیشن</div>
+      <div class="toggle-row"><span>نمایش نوتیفیکیشن دائمی هوا</span><label class="toggle-switch"><input type="checkbox" id="toggleNotif"><span class="toggle-slider"></span></label></div>
+    </div>
+  </div>
+  </div>
 
 <script>
 /* ===== WEATHER-REACTIVE ANIMATED BACKGROUND ===== */
@@ -875,7 +924,58 @@ async function loadWeather(){
     document.getElementById("weatherDesc").textContent="خطا در بارگذاری";
   }
 }
-
+/* ===== SETTINGS ===== */
+const THEMES={
+  blue:{accent:'#4facfe',bg:'#050d18'},
+  dark:{accent:'#7a8ba3',bg:'#020408'},
+  sunset:{accent:'#ff9a3c',bg:'#170a08'}
+};
+function getSettings(){
+  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true};
+  try{return Object.assign(def,JSON.parse(localStorage.getItem('havashenas_settings')||'{}'));}catch(e){return def;}
+}
+function applySettingsUI(){
+  const s=getSettings();
+  document.querySelectorAll('.theme-swatch').forEach(el=>el.classList.toggle('active',el.dataset.theme===s.theme));
+  document.getElementById('toggleHumidity').checked=s.showHumidity;
+  document.getElementById('toggleWind').checked=s.showWind;
+  document.getElementById('toggleTide').checked=s.showTide;
+  document.getElementById('toggleNotif').checked=s.notifEnabled;
+  applyTheme(s.theme);
+}
+function applyTheme(name){
+  const t=THEMES[name]||THEMES.blue;
+  document.documentElement.style.setProperty('--accent',t.accent);
+}
+function pushSettingsToNative(s){
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){
+    window.Capacitor.Plugins.CityWidget.setPrefs({
+      theme:s.theme,showHumidity:s.showHumidity,showWind:s.showWind,showTide:s.showTide,notifEnabled:s.notifEnabled
+    });
+  }
+}
+function saveSettings(partial){
+  const s=Object.assign(getSettings(),partial);
+  localStorage.setItem('havashenas_settings',JSON.stringify(s));
+  applyTheme(s.theme);
+  pushSettingsToNative(s);
+}
+function openSettings(){applySettingsUI();document.getElementById('settingsModal').classList.add('show');}
+function closeSettings(){document.getElementById('settingsModal').classList.remove('show');}
+document.getElementById('settingsModal').addEventListener('click',e=>{if(e.target.id==='settingsModal')closeSettings();});
+document.querySelectorAll('.theme-swatch').forEach(el=>{
+  el.addEventListener('click',()=>{
+    document.querySelectorAll('.theme-swatch').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    saveSettings({theme:el.dataset.theme});
+  });
+});
+document.getElementById('toggleHumidity').addEventListener('change',e=>saveSettings({showHumidity:e.target.checked}));
+document.getElementById('toggleWind').addEventListener('change',e=>saveSettings({showWind:e.target.checked}));
+document.getElementById('toggleTide').addEventListener('change',e=>saveSettings({showTide:e.target.checked}));
+document.getElementById('toggleNotif').addEventListener('change',e=>saveSettings({notifEnabled:e.target.checked}));
+applyTheme(getSettings().theme);
+pushSettingsToNative(getSettings());
 const savedCity=localStorage.getItem('havashenas_city');if(savedCity&&cities[savedCity]){citySelect.value=savedCity;}
 citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();});
 loadWeather();
