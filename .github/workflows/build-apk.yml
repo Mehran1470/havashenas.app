@@ -25,6 +25,7 @@ jobs:
           cp widget/WeatherNotificationService.java android/app/src/main/java/com/havashenas/hormozgan/WeatherNotificationService.java
           cp widget/weather_widget_layout.xml android/app/src/main/res/layout/weather_widget_layout.xml
           cp widget/notification_layout.xml android/app/src/main/res/layout/notification_layout.xml
+          cp widget/notification_layout_expanded.xml android/app/src/main/res/layout/notification_layout_expanded.xml
           cp widget/widget_background.xml android/app/src/main/res/drawable/widget_background.xml
           cp widget/widget_background_dark.xml android/app/src/main/res/drawable/widget_background_dark.xml
           cp widget/widget_background_sunset.xml android/app/src/main/res/drawable/widget_background_sunset.xml
