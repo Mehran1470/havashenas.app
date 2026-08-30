@@ -20,12 +20,14 @@ public class CityWidgetPlugin extends Plugin {
         String tideText = call.getString("tideText");
         String windText = call.getString("windText");
         String rainText = call.getString("rainText");
+        String humidityText = call.getString("humidityText");
         Context context = getContext();
         SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
         if (tideText != null) editor.putString("tide_text", tideText);
         if (windText != null) editor.putString("wind_text", windText);
         if (rainText != null) editor.putString("rain_text", rainText);
+        if (humidityText != null) editor.putString("humidity_text", humidityText);
         editor.apply();
 
         JSObject ret = new JSObject();
