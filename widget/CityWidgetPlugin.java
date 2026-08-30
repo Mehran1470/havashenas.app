@@ -34,6 +34,36 @@ public class CityWidgetPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void setPrefs(PluginCall call) {
+        String theme = call.getString("theme");
+        Boolean showHumidity = call.getBoolean("showHumidity");
+        Boolean showWind = call.getBoolean("showWind");
+        Boolean showTide = call.getBoolean("showTide");
+        Boolean notifEnabled = call.getBoolean("notifEnabled");
+
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        if (theme != null) editor.putString("theme", theme);
+        if (showHumidity != null) editor.putBoolean("show_humidity", showHumidity);
+        if (showWind != null) editor.putBoolean("show_wind", showWind);
+        if (showTide != null) editor.putBoolean("show_tide", showTide);
+        if (notifEnabled != null) editor.putBoolean("notif_enabled", notifEnabled);
+        editor.apply();
+
+        Intent intent = new Intent(context, WeatherWidgetProvider.class);
+        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
+        int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, WeatherWidgetProvider.class));
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        context.sendBroadcast(intent);
+
+        JSObject ret = new JSObject();
+        ret.put("success", true);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void setCity(PluginCall call) {
         String name = call.getString("name");
         Double lat = call.getDouble("lat");
