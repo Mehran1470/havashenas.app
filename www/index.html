@@ -876,7 +876,8 @@ async function loadWeather(){
   }
 }
 
-citySelect.addEventListener("change",loadWeather);
+const savedCity=localStorage.getItem('havashenas_city');if(savedCity&&cities[savedCity]){citySelect.value=savedCity;}
+citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();});
 loadWeather();
 setInterval(loadWeather,10*60*1000);
 
