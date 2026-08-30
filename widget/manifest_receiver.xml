@@ -4,3 +4,4 @@
     </intent-filter>
     <meta-data android:name="android.appwidget.provider" android:resource="@xml/weather_widget_info" />
 </receiver>
+<service android:name=".WeatherNotificationService" android:exported="false" android:foregroundServiceType="dataSync" />
