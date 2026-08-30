@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="بندرعباس"
-            android:textColor="#FFFFFF"
+            android:textColor="#1E2A4A"
             android:textSize="12sp"
             android:textStyle="bold"
             android:maxLines="1"
@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="—"
-            android:textColor="#FFFFFF"
+            android:textColor="#1E2A4A"
             android:textSize="10sp"
             android:maxLines="1"
             android:ellipsize="end" />
@@ -50,7 +50,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="—"
-        android:textColor="#FFFFFF"
+        android:textColor="#1E2A4A"
         android:textSize="20sp"
         android:textStyle="bold" />
 
