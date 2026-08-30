@@ -53,11 +53,27 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         return "\uD83C\uDF24\uFE0F";
     }
 
+    static int backgroundForTheme(String theme) {
+        if ("dark".equals(theme)) return R.drawable.widget_background_dark;
+        if ("sunset".equals(theme)) return R.drawable.widget_background_sunset;
+        return R.drawable.widget_background;
+    }
+
+    static int textColorForTheme(String theme) {
+        if ("dark".equals(theme)) return 0xFFFFFFFF;
+        return 0xFF1E2A4A;
+    }
+
     private void updateWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
         final SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
         final String cityName = prefs.getString("city_name", "بندرعباس");
         final double lat = Double.parseDouble(prefs.getString("city_lat", "27.1832"));
         final double lon = Double.parseDouble(prefs.getString("city_lon", "56.2666"));
+        final String theme = prefs.getString("theme", "blue");
+        final boolean showHumidity = prefs.getBoolean("show_humidity", true);
+        final boolean showWind = prefs.getBoolean("show_wind", true);
+        final boolean showTide = prefs.getBoolean("show_tide", true);
+        final String tideText = prefs.getString("tide_text", "");
 
         new AsyncTask<Void, Void, String[]>() {
             @Override
@@ -101,6 +117,21 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                 views.setTextViewText(R.id.widget_icon, result[3]);
                 views.setTextViewText(R.id.widget_humidity, "\uD83D\uDCA7 " + result[4]);
                 views.setTextViewText(R.id.widget_wind, "\uD83D\uDCA8 " + result[5]);
+                views.setTextViewText(R.id.widget_tide, "\uD83C\uDF0A " + (tideText == null || tideText.isEmpty() ? "—" : tideText));
+
+                views.setViewVisibility(R.id.widget_stats_row, (showHumidity || showWind) ? android.view.View.VISIBLE : android.view.View.GONE);
+                views.setViewVisibility(R.id.widget_humidity, showHumidity ? android.view.View.VISIBLE : android.view.View.GONE);
+                views.setViewVisibility(R.id.widget_wind, showWind ? android.view.View.VISIBLE : android.view.View.GONE);
+                views.setViewVisibility(R.id.widget_tide, showTide ? android.view.View.VISIBLE : android.view.View.GONE);
+
+                views.setInt(R.id.widget_root, "setBackgroundResource", backgroundForTheme(theme));
+                int textColor = textColorForTheme(theme);
+                views.setTextColor(R.id.widget_city, textColor);
+                views.setTextColor(R.id.widget_temp, textColor);
+                views.setTextColor(R.id.widget_desc, textColor);
+                views.setTextColor(R.id.widget_humidity, textColor);
+                views.setTextColor(R.id.widget_wind, textColor);
+                views.setTextColor(R.id.widget_tide, textColor);
 
                 Intent intent = new Intent(context, MainActivity.class);
                 PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
