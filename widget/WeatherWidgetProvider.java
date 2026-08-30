@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.widget.RemoteViews;
 
@@ -24,12 +25,43 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    private String describeCode(int code) {
+        if (code == 0) return "آسمان صاف";
+        if (code == 1) return "کمی ابری";
+        if (code == 2) return "نیمه ابری";
+        if (code == 3) return "ابری";
+        if (code == 45 || code == 48) return "مه‌آلود";
+        if (code >= 51 && code <= 55) return "نم‌نم باران";
+        if (code >= 61 && code <= 65) return "بارانی";
+        if (code >= 71 && code <= 75) return "برفی";
+        if (code >= 80 && code <= 82) return "رگبار باران";
+        if (code == 95) return "رعد و برق";
+        return "نامشخص";
+    }
+
+    private String emojiForCode(int code) {
+        if (code == 0) return "\u2600\uFE0F";
+        if (code == 1 || code == 2) return "\u26C5";
+        if (code == 3) return "\u2601\uFE0F";
+        if (code == 45 || code == 48) return "\uD83C\uDF2B\uFE0F";
+        if (code >= 51 && code <= 65) return "\uD83C\uDF27\uFE0F";
+        if (code >= 71 && code <= 75) return "\u2744\uFE0F";
+        if (code >= 80 && code <= 82) return "\uD83C\uDF27\uFE0F";
+        if (code == 95) return "\u26C8\uFE0F";
+        return "\uD83C\uDF24\uFE0F";
+    }
+
     private void updateWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
+        final SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+        final String cityName = prefs.getString("city_name", "بندرعباس");
+        final double lat = Double.parseDouble(prefs.getString("city_lat", "27.1832"));
+        final double lon = Double.parseDouble(prefs.getString("city_lon", "56.2666"));
+
         new AsyncTask<Void, Void, String[]>() {
             @Override
             protected String[] doInBackground(Void... voids) {
                 try {
-                    URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=27.1865&longitude=56.2808&current_weather=true");
+                    URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setConnectTimeout(10000);
                     conn.setReadTimeout(10000);
@@ -39,11 +71,21 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     while ((line = reader.readLine()) != null) sb.append(line);
                     reader.close();
                     JSONObject json = new JSONObject(sb.toString());
-                    JSONObject current = json.getJSONObject("current_weather");
-                    double temp = current.getDouble("temperature");
-                    return new String[]{Math.round(temp) + "°", "بندرعباس"};
+                    JSONObject current = json.getJSONObject("current");
+                    double temp = current.getDouble("temperature_2m");
+                    double humidity = current.getDouble("relative_humidity_2m");
+                    double wind = current.getDouble("wind_speed_10m");
+                    int code = current.getInt("weather_code");
+                    return new String[]{
+                        Math.round(temp) + "°",
+                        cityName,
+                        describeCode(code),
+                        emojiForCode(code),
+                        Math.round(humidity) + "%",
+                        Math.round(wind) + " km/h"
+                    };
                 } catch (Exception e) {
-                    return new String[]{"—", "بندرعباس"};
+                    return new String[]{"—", cityName, "—", "\uD83C\uDF24\uFE0F", "—", "—"};
                 }
             }
 
@@ -52,6 +94,10 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                 RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.weather_widget_layout);
                 views.setTextViewText(R.id.widget_temp, result[0]);
                 views.setTextViewText(R.id.widget_city, result[1]);
+                views.setTextViewText(R.id.widget_desc, result[2]);
+                views.setTextViewText(R.id.widget_icon, result[3]);
+                views.setTextViewText(R.id.widget_humidity, "\uD83D\uDCA7 " + result[4]);
+                views.setTextViewText(R.id.widget_wind, "\uD83D\uDCA8 " + result[5]);
 
                 Intent intent = new Intent(context, MainActivity.class);
                 PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
