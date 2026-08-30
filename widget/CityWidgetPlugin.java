@@ -17,6 +17,23 @@ public class CityWidgetPlugin extends Plugin {
 
     @PluginMethod
     public void setCity(PluginCall call) {
+        @PluginMethod
+    public void setTideInfo(PluginCall call) {
+        String tideText = call.getString("tideText");
+        String windText = call.getString("windText");
+        String rainText = call.getString("rainText");
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        if (tideText != null) editor.putString("tide_text", tideText);
+        if (windText != null) editor.putString("wind_text", windText);
+        if (rainText != null) editor.putString("rain_text", rainText);
+        editor.apply();
+
+        JSObject ret = new JSObject();
+        ret.put("success", true);
+        call.resolve(ret);
+    }
         String name = call.getString("name");
         Double lat = call.getDouble("lat");
         Double lon = call.getDouble("lon");
