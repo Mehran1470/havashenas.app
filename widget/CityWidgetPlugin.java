@@ -16,8 +16,6 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 public class CityWidgetPlugin extends Plugin {
 
     @PluginMethod
-    public void setCity(PluginCall call) {
-        @PluginMethod
     public void setTideInfo(PluginCall call) {
         String tideText = call.getString("tideText");
         String windText = call.getString("windText");
@@ -34,6 +32,9 @@ public class CityWidgetPlugin extends Plugin {
         ret.put("success", true);
         call.resolve(ret);
     }
+
+    @PluginMethod
+    public void setCity(PluginCall call) {
         String name = call.getString("name");
         Double lat = call.getDouble("lat");
         Double lon = call.getDouble("lon");
