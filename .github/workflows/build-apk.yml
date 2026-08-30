@@ -20,16 +20,23 @@ jobs:
         run: |
           mkdir -p android/app/src/main/java/com/havashenas/hormozgan
           cp widget/WeatherWidgetProvider.java android/app/src/main/java/com/havashenas/hormozgan/WeatherWidgetProvider.java
+          cp widget/CityWidgetPlugin.java android/app/src/main/java/com/havashenas/hormozgan/CityWidgetPlugin.java
+          cp widget/MainActivity.java android/app/src/main/java/com/havashenas/hormozgan/MainActivity.java
+          cp widget/WeatherNotificationService.java android/app/src/main/java/com/havashenas/hormozgan/WeatherNotificationService.java
           cp widget/weather_widget_layout.xml android/app/src/main/res/layout/weather_widget_layout.xml
+          cp widget/notification_layout.xml android/app/src/main/res/layout/notification_layout.xml
           cp widget/widget_background.xml android/app/src/main/res/drawable/widget_background.xml
           mkdir -p android/app/src/main/res/xml
           cp widget/weather_widget_info.xml android/app/src/main/res/xml/weather_widget_info.xml
           python3 -c "
           content = open('android/app/src/main/AndroidManifest.xml').read()
           receiver = open('widget/manifest_receiver.xml').read()
+          perms = open('widget/manifest_permissions.xml').read()
           content = content.replace('</application>', receiver + '\n    </application>')
+          content = content.replace('<application', perms + '\n    <application')
           open('android/app/src/main/AndroidManifest.xml', 'w').write(content)
           "
+        
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
