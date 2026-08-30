@@ -784,6 +784,7 @@ async function renderTideSection(){
 }
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
   showSkeleton();
   setStatus("در حال دریافت داده‌های زنده از Open-Meteo...");
   try{
