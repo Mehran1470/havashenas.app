@@ -34,7 +34,17 @@ public class WeatherNotificationService extends Service {
     public void onCreate() {
         super.onCreate();
         createChannel();
-        startForeground(NOTIF_ID, buildNotification("بندرعباس", "—", "—", "☀️"));
+        SharedPreferences prefs = getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+        String theme = prefs.getString("theme", "blue");
+        boolean notifEnabled = prefs.getBoolean("notif_enabled", true);
+
+        startForeground(NOTIF_ID, buildNotification("بندرعباس", "—", "—", "☀️", theme));
+
+        if (!notifEnabled) {
+            stopForeground(true);
+            stopSelf();
+            return;
+        }
         scheduleUpdates();
     }
 
@@ -61,9 +71,17 @@ public class WeatherNotificationService extends Service {
     private void fetchAndUpdate() {
         new Thread(() -> {
             SharedPreferences prefs = getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+            boolean notifEnabled = prefs.getBoolean("notif_enabled", true);
+            if (!notifEnabled) {
+                NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                manager.cancel(NOTIF_ID);
+                stopSelf();
+                return;
+            }
             String cityName = prefs.getString("city_name", "بندرعباس");
             double lat = Double.parseDouble(prefs.getString("city_lat", "27.1832"));
             double lon = Double.parseDouble(prefs.getString("city_lon", "56.2666"));
+            String theme = prefs.getString("theme", "blue");
             try {
                 URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,weather_code");
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -80,7 +98,7 @@ public class WeatherNotificationService extends Service {
                 int code = current.getInt("weather_code");
                 String desc = describeCode(code);
                 String emoji = emojiForCode(code);
-                Notification notif = buildNotification(cityName, Math.round(temp) + "°", desc, emoji);
+                Notification notif = buildNotification(cityName, Math.round(temp) + "°", desc, emoji, theme);
                 NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 manager.notify(NOTIF_ID, notif);
             } catch (Exception e) {
@@ -114,12 +132,19 @@ public class WeatherNotificationService extends Service {
         return "\uD83C\uDF24\uFE0F";
     }
 
-    private Notification buildNotification(String city, String temp, String desc, String emoji) {
+    private Notification buildNotification(String city, String temp, String desc, String emoji, String theme) {
         RemoteViews views = new RemoteViews(getPackageName(), R.layout.notification_layout);
         views.setTextViewText(R.id.notif_city, city);
         views.setTextViewText(R.id.notif_temp, temp);
         views.setTextViewText(R.id.notif_desc, desc);
         views.setTextViewText(R.id.notif_icon, emoji);
+
+        int bgRes = WeatherWidgetProvider.backgroundForTheme(theme);
+        int textColor = WeatherWidgetProvider.textColorForTheme(theme);
+        views.setInt(R.id.notif_root, "setBackgroundResource", bgRes);
+        views.setTextColor(R.id.notif_city, textColor);
+        views.setTextColor(R.id.notif_desc, textColor);
+        views.setTextColor(R.id.notif_temp, textColor);
 
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -148,4 +173,4 @@ public class WeatherNotificationService extends Service {
         super.onDestroy();
         handler.removeCallbacks(updateTask);
     }
-}
+            }
