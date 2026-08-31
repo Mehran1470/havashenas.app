@@ -29,10 +29,13 @@ header{padding:28px 0 16px;display:flex;justify-content:space-between;align-item
 .logo-text{font-size:26px;font-weight:900;letter-spacing:-.5px}
 .logo-sub{font-size:13px;color:var(--text-dim);margin-top:2px;font-weight:400}
 
+.header-actions{display:flex;align-items:center;gap:10px}
+
 select{appearance:none;-webkit-appearance:none;background:var(--glass-bg);border:1px solid var(--glass-border);color:var(--text);padding:12px 40px 12px 18px;border-radius:var(--radius-sm);font-family:inherit;font-size:15px;font-weight:500;cursor:pointer;outline:none;backdrop-filter:blur(12px);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffffaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 14px center;transition:all .3s ease}
 select:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
 select option{background:#0a1628;color:#fff;font-family:inherit}
-  .settings-btn{width:44px;height:44px;border-radius:14px;background:var(--glass-bg);border:1px solid var(--glass-border);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);transition:all .3s ease}
+
+.settings-btn{width:44px;height:44px;border-radius:14px;background:var(--glass-bg);border:1px solid var(--glass-border);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);transition:all .3s ease}
 .settings-btn:hover{background:rgba(255,255,255,.12);transform:rotate(30deg)}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
@@ -209,22 +212,24 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
     <div class="logo-icon"><img src="weather-logo.png" alt="لوگوی هواشناسی هرمزگان"></div>
     <div>
       <div class="logo-text">هواشناسی هرمزگان</div>
-      <div class="logo-sub">پیش‌بینی لحظه‌ای و دقیق</div>
+      <div class="logo-sub">پیشبینی لحظهای و دقیق</div>
     </div>
   </div>
-  <button id="settingsBtn" class="settings-btn" onclick="openSettings()">⚙️</button>
-  <select id="citySelect">
-    <option value="بندرعباس">بندرعباس</option>
-    <option value="هرمز">هرمز</option>
-    <option value="قشم">قشم</option>
-    <option value="میناب">میناب</option>
-    <option value="کیش">کیش</option>
-    <option value="بستک">بستک</option>
-    <option value="حاجی‌آباد">حاجی‌آباد</option>
-    <option value="رودان">رودان</option>
-    <option value="جاسک">جاسک</option>
-    <option value="ابوموسی">ابوموسی</option>
-  </select>
+  <div class="header-actions">
+    <button id="settingsBtn" class="settings-btn" onclick="openSettings()">⚙</button>
+    <select id="citySelect">
+      <option value="بندرعباس">بندرعباس</option>
+      <option value="هرمز">هرمز</option>
+      <option value="قشم">قشم</option>
+      <option value="میناب">میناب</option>
+      <option value="کیش">کیش</option>
+      <option value="بستک">بستک</option>
+      <option value="حاجیآباد">حاجیآباد</option>
+      <option value="رودان">رودان</option>
+      <option value="جاسک">جاسک</option>
+      <option value="ابوموسی">ابوموسی</option>
+    </select>
+  </div>
 </header>
 
 <main>
@@ -246,8 +251,8 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
   <div class="stats-grid" id="statsGrid">
     <div class="stat-card"><span class="stat-icon">💧</span><span class="stat-value" id="humidity">—</span><div class="stat-label">رطوبت</div></div>
     <div class="stat-card"><span class="stat-icon">💨</span><span class="stat-value" id="wind">—</span><div class="stat-label">سرعت باد</div></div>
-    <div class="stat-card"><span class="stat-icon">🌧️</span><span class="stat-value" id="rainProb">—</span><div class="stat-label">احتمال بارش</div></div>
-    <div class="stat-card"><span class="stat-icon">👁️</span><span class="stat-value" id="visibility">—</span><div class="stat-label">دید افقی</div></div>
+    <div class="stat-card"><span class="stat-icon">🌧</span><span class="stat-value" id="rainProb">—</span><div class="stat-label">احتمال بارش</div></div>
+    <div class="stat-card"><span class="stat-icon">👁</span><span class="stat-value" id="visibility">—</span><div class="stat-label">دید افقی</div></div>
     <div class="stat-card"><span class="stat-icon">🌅</span><span class="stat-value" id="sunrise">—</span><div class="stat-label">طلوع خورشید</div></div>
     <div class="stat-card"><span class="stat-icon">🌇</span><span class="stat-value" id="sunset">—</span><div class="stat-label">غروب خورشید</div></div>
     <div class="stat-card"><span class="stat-icon">🌊</span><span class="stat-value" id="tideNext">—</span><div class="stat-label">جزر و مد بعدی</div></div>
@@ -262,10 +267,11 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
       <span class="section-icon">🌊</span>
       <div class="section-title">جزر و مد <span style="font-size:14px;color:var(--text-dim);font-weight:400" id="tideCityLabel">بندرعباس</span></div>
     </div>
+    <div style="font-size:11px;color:var(--text-dim);opacity:.8;margin-bottom:12px;line-height:1.6">⚠️ این اطلاعات یک برآورد مدل‌محور است و داده رسمی نیست. برای تصمیم‌های ایمنی دریایی (قایق‌رانی، صید و...) حتماً از منابع رسمی سازمان بنادر و دریانوردی استفاده کنید.</div>
     
     <div class="tide-current">
       <div class="tide-current-state" id="tideCurrentState">
-        <span class="arrow" id="tideArrow">↗️</span>
+        <span class="arrow" id="tideArrow">↗</span>
         <span id="tideStateText">در حال مد</span>
       </div>
       <div class="tide-current-time" id="tideCurrentTime">—</div>
@@ -309,12 +315,12 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 </section>
 
 <section>
-  <div class="section-header"><span class="section-icon">⏰</span><div class="section-title">پیش‌بینی ۱۲ ساعت آینده</div></div>
+  <div class="section-header"><span class="section-icon">⏰</span><div class="section-title">پیشبینی ۱۲ ساعت آینده</div></div>
   <div class="hourly-wrap"><div class="hourly-cards" id="hourlyCards"></div></div>
 </section>
 
 <section>
-  <div class="section-header"><span class="section-icon">📅</span><div class="section-title">پیش‌بینی ۷ روز آینده</div></div>
+  <div class="section-header"><span class="section-icon">📅</span><div class="section-title">پیشبینی ۷ روز آینده</div></div>
   <div class="days-grid" id="daysGrid"></div>
   <div class="day-detail" id="dayDetail">
     <div class="detail-header"><h3 id="detailTitle">جزئیات روز</h3><button class="detail-close" onclick="closeDayDetail()">×</button></div>
@@ -323,13 +329,13 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 </section>
 
 <section>
-  <div class="section-header"><span class="section-icon">🗺️</span><div class="section-title">نقشه هواشناسی زنده</div></div>
+  <div class="section-header"><span class="section-icon">🗺</span><div class="section-title">نقشه هواشناسی زنده</div></div>
   <div class="map-wrap">
     <div class="map-toolbar">
-      <button class="map-btn active" onclick="switchMap(this,'wind','map')"><span class="ico">🌬️</span>باد</button>
-      <button class="map-btn" onclick="switchMap(this,'rain','satellite')"><span class="ico">🌧️</span>بارش</button>
-      <button class="map-btn" onclick="switchMap(this,'clouds','satellite')"><span class="ico">☁️</span>ابر</button>
-      <button class="map-btn" onclick="switchMap(this,'temp','map')"><span class="ico">🌡️</span>دما</button>
+      <button class="map-btn active" onclick="switchMap(this,'wind','map')"><span class="ico">🌬</span>باد</button>
+      <button class="map-btn" onclick="switchMap(this,'rain','satellite')"><span class="ico">🌧</span>بارش</button>
+      <button class="map-btn" onclick="switchMap(this,'clouds','satellite')"><span class="ico">☁</span>ابر</button>
+      <button class="map-btn" onclick="switchMap(this,'temp','map')"><span class="ico">🌡</span>دما</button>
     </div>
     <div class="map-container" id="mapContainer">
       <div class="map-loader" id="mapLoader"><span>در حال بارگذاری نقشه...</span></div>
@@ -341,9 +347,9 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 <div class="status-bar" id="statusBar"><div class="status-dot"></div><span id="statusText">در حال اتصال...</span></div>
 </main>
 
-<footer><div style="opacity:.6">داده‌ها از Open-Meteo & Windy</div></footer>
-</div>
-  <div class="modal-overlay" id="settingsModal">
+<footer><div style="opacity:.6">دادهها از Open-Meteo & Windy</div></footer>
+
+<div class="modal-overlay" id="settingsModal">
   <div class="modal-panel">
     <div class="modal-title">تنظیمات ویجت و نوتیفیکیشن <button class="modal-close" onclick="closeSettings()">×</button></div>
 
@@ -353,8 +359,16 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
         <div class="theme-swatch" data-theme="blue" style="background:linear-gradient(135deg,#BFE0F5,#5FA0D4)"></div>
         <div class="theme-swatch" data-theme="dark" style="background:linear-gradient(135deg,#1c2b4f,#0a1628)"></div>
         <div class="theme-swatch" data-theme="sunset" style="background:linear-gradient(135deg,#ffb37a,#ff6f6f)"></div>
-
       </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-group-title">🌫️ شفافیت ویجت</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <input type="range" id="opacitySlider" min="20" max="100" step="5" style="flex:1;accent-color:var(--accent)">
+        <span id="opacityValue" style="font-size:13px;color:var(--text-dim);min-width:38px;text-align:left">80%</span>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:6px">وقتی شفافیت کامل نباشد، رنگ پس‌زمینه ویجت به‌طور خودکار بر اساس ساعت روز (شب/طلوع/غروب/روز) تنظیم می‌شود.</div>
     </div>
 
     <div class="settings-group">
@@ -369,7 +383,9 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
       <div class="toggle-row"><span>نمایش نوتیفیکیشن دائمی هوا</span><label class="toggle-switch"><input type="checkbox" id="toggleNotif"><span class="toggle-slider"></span></label></div>
     </div>
   </div>
-  </div>
+</div>
+
+</div>
 
 <script>
 /* ===== WEATHER-REACTIVE ANIMATED BACKGROUND ===== */
@@ -583,7 +599,7 @@ const cities={
   "میناب":{lat:27.1467,lon:57.0801,tideOffset:25},
   "کیش":{lat:26.5320,lon:53.9763,tideOffset:-15},
   "بستک":{lat:27.1960,lon:54.3668,tideOffset:-20},
-  "حاجی‌آباد":{lat:28.3092,lon:55.9076,tideOffset:18},
+  "حاجیآباد":{lat:28.3092,lon:55.9076,tideOffset:18},
   "رودان":{lat:27.4419,lon:57.1920,tideOffset:22},
   "جاسک":{lat:25.6439,lon:57.7745,tideOffset:35},
   "ابوموسی":{lat:25.8797,lon:55.0300,tideOffset:-10}
@@ -623,7 +639,7 @@ function getIcon(code,isDay){
   if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code))return rain;if([71,73,75,77].includes(code))return snow;if([95,96,99].includes(code))return thunder;
   return isDay?sun:moon;
 }
-function wText(code){if(code===0)return"صاف";if([1,2].includes(code))return"کمی ابری";if(code===3)return"ابری";if([45,48].includes(code))return"مه‌آلود";if([51,53,55,56,57].includes(code))return"نم‌نم";if([61,63,65,66,67,80,81,82].includes(code))return"بارانی";if([71,73,75,77].includes(code))return"برفی";if([95,96,99].includes(code))return"رعدوبرق";return"نامشخص";}
+function wText(code){if(code===0)return"صاف";if([1,2].includes(code))return"کمی ابری";if(code===3)return"ابری";if([45,48].includes(code))return"مهآلود";if([51,53,55,56,57].includes(code))return"نمنم";if([61,63,65,66,67,80,81,82].includes(code))return"بارانی";if([71,73,75,77].includes(code))return"برفی";if([95,96,99].includes(code))return"رعدوبرق";return"نامشخص";}
 function faDate(iso){return new Date(iso).toLocaleDateString("fa-IR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});}
 function timeFa(iso){return new Date(iso).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",hour12:false});}
 function dayName(iso){return new Date(iso).toLocaleDateString("fa-IR",{weekday:"long"});}
@@ -755,17 +771,17 @@ function closeDayDetail(){document.getElementById('dayDetail').classList.remove(
 function showDayDetail(idx){
   if(!lastWeatherData)return;
   const d=lastWeatherData.daily;
-  const names=["امروز","فردا","پس‌فردا","روز چهارم","روز پنجم","روز ششم","روز هفتم"];
+  const names=["امروز","فردا","پسفردا","روز چهارم","روز پنجم","روز ششم","روز هفتم"];
   const dayDate=new Date(d.time[idx]);
   const mp=moonPhase(dayDate);
   const city=citySelect.value;
   const c=cities[city];
   document.getElementById('detailTitle').textContent=names[idx]+' • '+dayName(d.time[idx]);
   const items=[
-    {icon:'🌡️',label:'بیشینه دما',val:Math.round(d.temperature_2m_max[idx])+'°'},
-    {icon:'❄️',label:'کمینه دما',val:Math.round(d.temperature_2m_min[idx])+'°'},
+    {icon:'🌡',label:'بیشینه دما',val:Math.round(d.temperature_2m_max[idx])+'°'},
+    {icon:'❄',label:'کمینه دما',val:Math.round(d.temperature_2m_min[idx])+'°'},
     {icon:'💧',label:'احتمال بارش',val:(d.precipitation_probability_max[idx]??0)+'%'},
-    {icon:'🌧️',label:'بارش',val:(d.precipitation_sum[idx]??0).toFixed(1)+' mm'},
+    {icon:'🌧',label:'بارش',val:(d.precipitation_sum[idx]??0).toFixed(1)+' mm'},
     {icon:'💨',label:'باد',val:Math.round(lastWeatherData.hourly.wind_speed_10m[idx*24]??0)+' km/h'},
     {icon:'🌅',label:'طلوع',val:timeFa(d.sunrise[idx])},
     {icon:'🌇',label:'غروب',val:timeFa(d.sunset[idx])},
@@ -800,12 +816,12 @@ async function renderTideSection(){
   const gaugeEl=document.getElementById('tideGaugeFill');
   if(today.currentState){
     stateEl.textContent=today.currentState;
-    arrowEl.textContent=today.currentState.includes('مد')?'↗️':'↘️';
+    arrowEl.textContent=today.currentState.includes('مد')?'↗':'↘';
     gaugeEl.style.height=Math.max(10,Math.min(90,today.currentPercent))+'%';
   }else{
-    stateEl.textContent='اطلاعات نامشخص';arrowEl.textContent='➡️';gaugeEl.style.height='50%';
+    stateEl.textContent='اطلاعات نامشخص';arrowEl.textContent='➡';gaugeEl.style.height='50%';
   }
-  document.getElementById('tideCurrentTime').textContent='پیش‌بینی مدل دریایی • به وقت محلی';
+  document.getElementById('tideCurrentTime').textContent='پیشبینی مدل دریایی • به وقت محلی';
 
   if(today.nextHigh){
     document.getElementById('nextHighTime').textContent=timeFa(today.nextHigh.time.toISOString());
@@ -835,9 +851,9 @@ async function renderTideSection(){
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
- if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const hT=document.getElementById('nextHighTime'),lT=document.getElementById('nextLowTime');const hTxt=hT?hT.textContent:'—',lTxt=lT?lT.textContent:'—';const tideTxt=(hTxt!=='—'?'مد '+hTxt:'')+(hTxt!=='—'&&lTxt!=='—'?' | ':'')+(lTxt!=='—'?'جزر '+lTxt:'');const windEl=document.getElementById('wind'),humEl=document.getElementById('humidity');window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:tideTxt||'—',windText:windEl?windEl.textContent:'',rainText:'',humidityText:humEl?humEl.textContent:''});},3000);} 
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:tideTxt,windText:'',rainText:''});},3000);}
   showSkeleton();
-  setStatus("در حال دریافت داده‌های زنده از Open-Meteo...");
+  setStatus("در حال دریافت دادههای زنده از Open-Meteo...");
   try{
     const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,visibility,is_day&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset&timezone=auto&forecast_days=7`;
     const res=await fetch(url,{cache:"no-store"});
@@ -866,6 +882,7 @@ async function loadWeather(){
     document.getElementById("visibility").textContent=cur.visibility!=null?(Math.round(cur.visibility/100)/10)+" km":"—";
     document.getElementById("sunrise").textContent=timeFa(d.daily.sunrise[0]);
     document.getElementById("sunset").textContent=timeFa(d.daily.sunset[0]);
+    pushVisualInfo(cur.weather_code,d.daily.sunrise[0],d.daily.sunset[0]);
 
     // Hourly cards
     const idx=d.hourly.time.findIndex(t=>t>=cur.time);
@@ -888,7 +905,7 @@ async function loadWeather(){
     document.getElementById("hourlyCards").innerHTML=hourHTML;
 
     // Days grid
-    const names=["امروز","فردا","پس‌فردا"];
+    const names=["امروز","فردا","پسفردا"];
     let daysHTML="";
     for(let i=0;i<7;i++){
       const name=i<3?names[i]:dayName(d.daily.time[i]);
@@ -917,7 +934,7 @@ async function loadWeather(){
       document.querySelector('#tideSection .tide-card').innerHTML='<div class="tide-header"><span class="section-icon">🌊</span><div class="section-title">جزر و مد</div></div><div style="color:var(--text-dim);font-size:13px;padding:8px 0">اطلاعات جزر و مد برای این شهر در دسترس نیست.</div>';
     }
 
-    setStatus("✅ داده‌های زنده فعال است. اطلاعات از Open-Meteo دریافت می‌شود.");
+    setStatus("✅ دادههای زنده فعال است. اطلاعات از Open-Meteo دریافت میشود.");
     updateMap();
   }catch(e){
     console.error(e);
@@ -925,6 +942,7 @@ async function loadWeather(){
     document.getElementById("weatherDesc").textContent="خطا در بارگذاری";
   }
 }
+
 /* ===== SETTINGS ===== */
 const THEMES={
   blue:{accent:'#4facfe',bg:'#050d18'},
@@ -932,7 +950,7 @@ const THEMES={
   sunset:{accent:'#ff9a3c',bg:'#170a08'}
 };
 function getSettings(){
-  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true};
+  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true,opacity:80};
   try{return Object.assign(def,JSON.parse(localStorage.getItem('havashenas_settings')||'{}'));}catch(e){return def;}
 }
 function applySettingsUI(){
@@ -942,6 +960,8 @@ function applySettingsUI(){
   document.getElementById('toggleWind').checked=s.showWind;
   document.getElementById('toggleTide').checked=s.showTide;
   document.getElementById('toggleNotif').checked=s.notifEnabled;
+  document.getElementById('opacitySlider').value=s.opacity;
+  document.getElementById('opacityValue').textContent=s.opacity+'%';
   applyTheme(s.theme);
 }
 function applyTheme(name){
@@ -951,8 +971,23 @@ function applyTheme(name){
 function pushSettingsToNative(s){
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){
     window.Capacitor.Plugins.CityWidget.setPrefs({
-      theme:s.theme,showHumidity:s.showHumidity,showWind:s.showWind,showTide:s.showTide,notifEnabled:s.notifEnabled
+      theme:s.theme,showHumidity:s.showHumidity,showWind:s.showWind,showTide:s.showTide,notifEnabled:s.notifEnabled,opacity:s.opacity
     });
+  }
+}
+function computeTimeOfDay(now,sunriseIso,sunsetIso){
+  if(!sunriseIso||!sunsetIso)return 'day';
+  const sunrise=new Date(sunriseIso),sunset=new Date(sunsetIso);
+  const halfHour=30*60*1000;
+  if(Math.abs(now-sunrise)<=halfHour)return 'sunrise';
+  if(Math.abs(now-sunset)<=halfHour)return 'sunset';
+  if(now<sunrise||now>sunset)return 'night';
+  return 'day';
+}
+function pushVisualInfo(weatherCode,sunriseIso,sunsetIso){
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget&&window.Capacitor.Plugins.CityWidget.setVisualInfo){
+    const tod=computeTimeOfDay(new Date(),sunriseIso,sunsetIso);
+    window.Capacitor.Plugins.CityWidget.setVisualInfo({timeOfDay:tod,weatherCode:String(weatherCode)});
   }
 }
 function saveSettings(partial){
@@ -975,8 +1010,11 @@ document.getElementById('toggleHumidity').addEventListener('change',e=>saveSetti
 document.getElementById('toggleWind').addEventListener('change',e=>saveSettings({showWind:e.target.checked}));
 document.getElementById('toggleTide').addEventListener('change',e=>saveSettings({showTide:e.target.checked}));
 document.getElementById('toggleNotif').addEventListener('change',e=>saveSettings({notifEnabled:e.target.checked}));
+document.getElementById('opacitySlider').addEventListener('input',e=>{document.getElementById('opacityValue').textContent=e.target.value+'%';});
+document.getElementById('opacitySlider').addEventListener('change',e=>saveSettings({opacity:Number(e.target.value)}));
 applyTheme(getSettings().theme);
 pushSettingsToNative(getSettings());
+
 const savedCity=localStorage.getItem('havashenas_city');if(savedCity&&cities[savedCity]){citySelect.value=savedCity;}
 citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();});
 loadWeather();
