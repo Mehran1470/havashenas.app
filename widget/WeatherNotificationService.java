@@ -133,47 +133,25 @@ public class WeatherNotificationService extends Service {
     }
 
     private Notification buildNotification(String city, String temp, String desc, String emoji, String theme) {
-        SharedPreferences prefs = getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
-        String tideText = prefs.getString("tide_text", "—");
-        String windText = prefs.getString("wind_text", "");
-        String humidityText = prefs.getString("humidity_text", "");
+        RemoteViews views = new RemoteViews(getPackageName(), R.layout.notification_layout);
+        views.setTextViewText(R.id.notif_city, city);
+        views.setTextViewText(R.id.notif_temp, temp);
+        views.setTextViewText(R.id.notif_desc, desc);
+        views.setTextViewText(R.id.notif_icon, emoji);
 
         int bgRes = WeatherWidgetProvider.backgroundForTheme(theme);
         int textColor = WeatherWidgetProvider.textColorForTheme(theme);
-
-        RemoteViews collapsed = new RemoteViews(getPackageName(), R.layout.notification_layout);
-        collapsed.setTextViewText(R.id.notif_city, city);
-        collapsed.setTextViewText(R.id.notif_temp, temp);
-        collapsed.setTextViewText(R.id.notif_desc, desc);
-        collapsed.setTextViewText(R.id.notif_icon, emoji);
-        collapsed.setInt(R.id.notif_root, "setBackgroundResource", bgRes);
-        collapsed.setTextColor(R.id.notif_city, textColor);
-        collapsed.setTextColor(R.id.notif_desc, textColor);
-        collapsed.setTextColor(R.id.notif_temp, textColor);
-
-        RemoteViews expanded = new RemoteViews(getPackageName(), R.layout.notification_layout_expanded);
-        expanded.setTextViewText(R.id.notif_exp_city, city);
-        expanded.setTextViewText(R.id.notif_exp_temp, temp);
-        expanded.setTextViewText(R.id.notif_exp_desc, desc);
-        expanded.setTextViewText(R.id.notif_exp_icon, emoji);
-        expanded.setTextViewText(R.id.notif_exp_tide, "\uD83C\uDF0A " + (tideText == null || tideText.isEmpty() ? "—" : tideText));
-        expanded.setTextViewText(R.id.notif_exp_wind, "\uD83D\uDCA8 " + (windText == null || windText.isEmpty() ? "—" : windText));
-        expanded.setTextViewText(R.id.notif_exp_humidity, "\uD83D\uDCA7 " + (humidityText == null || humidityText.isEmpty() ? "—" : humidityText));
-        expanded.setInt(R.id.notif_expanded_root, "setBackgroundResource", bgRes);
-        expanded.setTextColor(R.id.notif_exp_city, textColor);
-        expanded.setTextColor(R.id.notif_exp_desc, textColor);
-        expanded.setTextColor(R.id.notif_exp_temp, textColor);
-        expanded.setTextColor(R.id.notif_exp_tide, textColor);
-        expanded.setTextColor(R.id.notif_exp_wind, textColor);
-        expanded.setTextColor(R.id.notif_exp_humidity, textColor);
+        views.setInt(R.id.notif_root, "setBackgroundResource", bgRes);
+        views.setTextColor(R.id.notif_city, textColor);
+        views.setTextColor(R.id.notif_desc, textColor);
+        views.setTextColor(R.id.notif_temp, textColor);
 
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setCustomContentView(collapsed)
-                .setCustomBigContentView(expanded)
+                .setCustomContentView(views)
                 .setOngoing(true)
                 .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -195,4 +173,4 @@ public class WeatherNotificationService extends Service {
         super.onDestroy();
         handler.removeCallbacks(updateTask);
     }
-            }
+}
