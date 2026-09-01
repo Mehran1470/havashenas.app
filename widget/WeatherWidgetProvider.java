@@ -86,14 +86,14 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
     }
 
     private static int colorForTimeOfDay(String timeOfDay) {
-        if ("night".equals(timeOfDay)) return 0xFF12151D;
-        if ("sunrise".equals(timeOfDay) || "sunset".equals(timeOfDay)) return 0xFFE0904F;
-        return 0xFF4FACFE;
+        if ("night".equals(timeOfDay)) return 0xFF1B1F37;
+        if ("sunrise".equals(timeOfDay) || "sunset".equals(timeOfDay)) return 0xFFFE9C95;
+        return 0xFFB3D6FC;
     }
 
     private static int textColorForTimeOfDay(String timeOfDay) {
-        if ("day".equals(timeOfDay)) return 0xFF1E2A4A;
-        return 0xFFFFFFFF;
+        if ("night".equals(timeOfDay)) return 0xFFFFFFFF;
+        return 0xFF1E2A4A;
     }
 
     private void updateWidget(final Context context, final AppWidgetManager appWidgetManager, final int appWidgetId) {
@@ -107,13 +107,13 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
         final boolean showTide = prefs.getBoolean("show_tide", true);
         final String tideText = prefs.getString("tide_text", "");
         final int opacity = prefs.getInt("opacity", 80);
-        final String timeOfDay = prefs.getString("time_of_day", "day");
+
 
         new AsyncTask<Void, Void, String[]>() {
             @Override
             protected String[] doInBackground(Void... voids) {
                 try {
-                    URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day");
+                    URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,is_day&daily=sunrise,sunset&timezone=auto");
                     HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setConnectTimeout(10000);
                     conn.setReadTimeout(10000);
@@ -129,6 +129,23 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     double wind = current.getDouble("wind_speed_10m");
                     int code = current.getInt("weather_code");
                     boolean isDay = current.getInt("is_day") == 1;
+                    String timeOfDay = "day";
+                    try {
+                        JSONObject daily = json.getJSONObject("daily");
+                        String nowIso = current.getString("time");
+                        String sunriseIso = daily.getJSONArray("sunrise").getString(0);
+                        String sunsetIso = daily.getJSONArray("sunset").getString(0);
+                        java.text.SimpleDateFormat fmt = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm", java.util.Locale.US);
+                        long now = fmt.parse(nowIso).getTime();
+                        long sunrise = fmt.parse(sunriseIso).getTime();
+                        long sunset = fmt.parse(sunsetIso).getTime();
+                        long halfHour = 30 * 60 * 1000;
+                        if (Math.abs(now - sunrise) <= halfHour) timeOfDay = "sunrise";
+                        else if (Math.abs(now - sunset) <= halfHour) timeOfDay = "sunset";
+                        else if (now < sunrise || now > sunset) timeOfDay = "night";
+                    } catch (Exception ignore) {
+                        timeOfDay = isDay ? "day" : "night";
+                    }
                     return new String[]{
                         Math.round(temp) + "°",
                         cityName,
@@ -136,10 +153,11 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                         emojiForCode(code, wind, isDay),
                         Math.round(humidity) + "%",
                         Math.round(wind) + " km/h",
-                        String.valueOf(iconForCode(code, wind, isDay))
+                        String.valueOf(iconForCode(code, wind, isDay)),
+                        timeOfDay
                     };
                 } catch (Exception e) {
-                    return new String[]{"—", cityName, "—", "\uD83C\uDF24\uFE0F", "—", "—", String.valueOf(R.drawable.ic_cloud)};
+                    return new String[]{"—", cityName, "—", "\uD83C\uDF24\uFE0F", "—", "—", String.valueOf(R.drawable.ic_cloud), "day"};
                 }
             }
 
@@ -161,6 +179,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
 
                 int textColor;
                 int finalColor;
+                String timeOfDay = result[7];
                 if (opacity >= 100) {
                     finalColor = 0xFF000000 | flatColorForTheme(theme);
                     textColor = textColorForTheme(theme);
