@@ -29,6 +29,16 @@ jobs:
           cp widget/widget_background.xml android/app/src/main/res/drawable/widget_background.xml
           cp widget/widget_background_dark.xml android/app/src/main/res/drawable/widget_background_dark.xml
           cp widget/widget_background_sunset.xml android/app/src/main/res/drawable/widget_background_sunset.xml
+          cp widget/ic_sun.xml android/app/src/main/res/drawable/ic_sun.xml
+          cp widget/ic_moon_star.xml android/app/src/main/res/drawable/ic_moon_star.xml
+          cp widget/ic_cloud.xml android/app/src/main/res/drawable/ic_cloud.xml
+          cp widget/ic_partly_day.xml android/app/src/main/res/drawable/ic_partly_day.xml
+          cp widget/ic_partly_night.xml android/app/src/main/res/drawable/ic_partly_night.xml
+          cp widget/ic_rain.xml android/app/src/main/res/drawable/ic_rain.xml
+          cp widget/ic_storm.xml android/app/src/main/res/drawable/ic_storm.xml
+          cp widget/ic_wind.xml android/app/src/main/res/drawable/ic_wind.xml
+          cp widget/ic_snow.xml android/app/src/main/res/drawable/ic_snow.xml
+          cp widget/ic_fog.xml android/app/src/main/res/drawable/ic_fog.xml
           mkdir -p android/app/src/main/res/xml
           cp widget/weather_widget_info.xml android/app/src/main/res/xml/weather_widget_info.xml
           python3 -c "
