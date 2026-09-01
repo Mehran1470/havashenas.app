@@ -17,13 +17,13 @@
         android:textSize="15sp"
         android:textStyle="bold" />
 
-    <TextView
+    <ImageView
         android:id="@+id/widget_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_marginTop="6dp"
-        android:text="☀️"
-        android:textSize="34sp" />
+        android:src="@drawable/ic_sun"
+        android:contentDescription="آیکون وضعیت هوا" />
 
     <TextView
         android:id="@+id/widget_temp"
