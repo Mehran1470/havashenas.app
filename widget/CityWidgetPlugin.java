@@ -15,6 +15,15 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "CityWidget")
 public class CityWidgetPlugin extends Plugin {
 
+    private void broadcastWidgetUpdate(Context context) {
+        Intent intent = new Intent(context, WeatherWidgetProvider.class);
+        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
+        int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, WeatherWidgetProvider.class));
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+        context.sendBroadcast(intent);
+    }
+
     @PluginMethod
     public void setTideInfo(PluginCall call) {
         String tideText = call.getString("tideText");
@@ -30,6 +39,32 @@ public class CityWidgetPlugin extends Plugin {
         if (humidityText != null) editor.putString("humidity_text", humidityText);
         editor.apply();
 
+        Intent svcIntent = new Intent(context, WeatherNotificationService.class);
+        svcIntent.setAction("com.havashenas.hormozgan.REFRESH");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            context.startForegroundService(svcIntent);
+        } else {
+            context.startService(svcIntent);
+        }
+
+        JSObject ret = new JSObject();
+        ret.put("success", true);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void setVisualInfo(PluginCall call) {
+        String timeOfDay = call.getString("timeOfDay");
+        String weatherCode = call.getString("weatherCode");
+        Context context = getContext();
+        SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        if (timeOfDay != null) editor.putString("time_of_day", timeOfDay);
+        if (weatherCode != null) editor.putString("weather_code", weatherCode);
+        editor.apply();
+
+        broadcastWidgetUpdate(context);
+
         JSObject ret = new JSObject();
         ret.put("success", true);
         call.resolve(ret);
@@ -42,6 +77,7 @@ public class CityWidgetPlugin extends Plugin {
         Boolean showWind = call.getBoolean("showWind");
         Boolean showTide = call.getBoolean("showTide");
         Boolean notifEnabled = call.getBoolean("notifEnabled");
+        Integer opacity = call.getInt("opacity");
 
         Context context = getContext();
         SharedPreferences prefs = context.getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
@@ -51,14 +87,10 @@ public class CityWidgetPlugin extends Plugin {
         if (showWind != null) editor.putBoolean("show_wind", showWind);
         if (showTide != null) editor.putBoolean("show_tide", showTide);
         if (notifEnabled != null) editor.putBoolean("notif_enabled", notifEnabled);
+        if (opacity != null) editor.putInt("opacity", opacity);
         editor.apply();
 
-        Intent intent = new Intent(context, WeatherWidgetProvider.class);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
-        int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, WeatherWidgetProvider.class));
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        context.sendBroadcast(intent);
+        broadcastWidgetUpdate(context);
 
         JSObject ret = new JSObject();
         ret.put("success", true);
@@ -82,12 +114,7 @@ public class CityWidgetPlugin extends Plugin {
         editor.putString("city_lon", String.valueOf(lon));
         editor.apply();
 
-        Intent intent = new Intent(context, WeatherWidgetProvider.class);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
-        AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
-        int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, WeatherWidgetProvider.class));
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        context.sendBroadcast(intent);
+        broadcastWidgetUpdate(context);
 
         JSObject ret = new JSObject();
         ret.put("success", true);
