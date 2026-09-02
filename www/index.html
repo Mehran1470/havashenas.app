@@ -1078,7 +1078,7 @@ document.getElementById('footerTapZone').addEventListener('click',()=>{
   footerTapTimer=setTimeout(()=>{footerTapCount=0;},2000);
   if(footerTapCount>=7){
     footerTapCount=0;
-    document.getElementById('maxAccuracyGroup').style.display='';
+    document.getElementById('maxAccuracyConfirm').classList.add('show');
   }
 });
 document.getElementById('toggleMaxAccuracy').addEventListener('change',e=>{
@@ -1090,6 +1090,7 @@ document.getElementById('toggleMaxAccuracy').addEventListener('change',e=>{
   }
 });
 document.getElementById('maxAccuracyEnableBtn').addEventListener('click',()=>{
+  document.getElementById('maxAccuracyGroup').style.display='';
   document.getElementById('toggleMaxAccuracy').checked=true;
   saveSettings({maxAccuracy:true});
   document.getElementById('maxAccuracyConfirm').classList.remove('show');
