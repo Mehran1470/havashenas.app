@@ -267,7 +267,6 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
       <span class="section-icon">🌊</span>
       <div class="section-title">جزر و مد <span style="font-size:14px;color:var(--text-dim);font-weight:400" id="tideCityLabel">بندرعباس</span></div>
     </div>
-    <div style="font-size:11px;color:var(--text-dim);opacity:.8;margin-bottom:12px;line-height:1.6">⚠️ این اطلاعات یک برآورد مدل‌محور است و داده رسمی نیست. برای تصمیم‌های ایمنی دریایی (قایق‌رانی، صید و...) حتماً از منابع رسمی سازمان بنادر و دریانوردی استفاده کنید.</div>
     
     <div class="tide-current">
       <div class="tide-current-state" id="tideCurrentState">
@@ -347,7 +346,7 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 <div class="status-bar" id="statusBar"><div class="status-dot"></div><span id="statusText">در حال اتصال...</span></div>
 </main>
 
-<footer><div id="footerTapZone" style="opacity:.6">دادهها از Open-Meteo & Windy</div></footer>
+<footer><div id="footerTapZone" style="opacity:.6;padding:14px;display:inline-block">دادهها از Open-Meteo & Windy</div></footer>
 
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-panel">
@@ -1075,10 +1074,13 @@ let footerTapCount=0,footerTapTimer=null;
 document.getElementById('footerTapZone').addEventListener('click',()=>{
   footerTapCount++;
   clearTimeout(footerTapTimer);
-  footerTapTimer=setTimeout(()=>{footerTapCount=0;},2000);
+  footerTapTimer=setTimeout(()=>{footerTapCount=0;document.getElementById('footerTapZone').textContent='دادهها از Open-Meteo & Windy';},4000);
   if(footerTapCount>=7){
     footerTapCount=0;
+    document.getElementById('footerTapZone').textContent='دادهها از Open-Meteo & Windy';
     document.getElementById('maxAccuracyConfirm').classList.add('show');
+  }else if(footerTapCount>=3){
+    document.getElementById('footerTapZone').textContent=(7-footerTapCount)+' ضربه‌ی دیگر...';
   }
 });
 document.getElementById('toggleMaxAccuracy').addEventListener('change',e=>{
