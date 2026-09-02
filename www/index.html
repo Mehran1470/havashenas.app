@@ -265,8 +265,9 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
   <div class="tide-card">
     <div class="tide-header">
       <span class="section-icon">🌊</span>
-      <div class="section-title">جزر و مد <span style="font-size:14px;color:var(--text-dim);font-weight:400" id="tideCityLabel">بندرعباس</span></div>
+      <div class="section-title">جزر و مد <span style="font-size:14px;color:var(--text-dim);font-weight:400" id="tideCityLabel">بندرعباس</span><span id="tideAccuracyBadge" style="display:none;font-size:11px;font-weight:600;color:var(--accent-ocean);border:1px solid rgba(0,210,211,.4);border-radius:20px;padding:2px 8px;margin-right:6px">🌍 دقت حداکثری</span></div>
     </div>
+    <div style="font-size:11px;color:var(--text-dim);opacity:.8;margin-bottom:12px;line-height:1.6">⚠️ این اطلاعات یک برآورد مدل‌محور است و داده رسمی نیست. برای تصمیم‌های ایمنی دریایی (قایق‌رانی، صید و...) حتماً از منابع رسمی سازمان بنادر و دریانوردی استفاده کنید.</div>
     
     <div class="tide-current">
       <div class="tide-current-state" id="tideCurrentState">
@@ -818,6 +819,56 @@ function showDayDetail(idx){
     document.getElementById('detailGrid').innerHTML=items.map(it=>`<div class="detail-item"><span>${it.icon} ${it.label}</span><b>${it.val}</b></div>`).join('');
   }).catch(()=>{});
 }
+async function fetchTidesODB(lat,lon,dateObj){
+  const dateStr=dateObj.toISOString().slice(0,10);
+  const url=`https://eco.odb.ntu.edu.tw/api/tide/forecast?lon=${lon}&lat=${lat}&date=${dateStr}&tz=%2B03:30`;
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)return null;
+  const data=await res.json();
+  const day=data.days&&data.days[0];
+  if(!day||!day.tide||!day.tide.length)return null;
+  return day.tide.map(t=>({
+    time:new Date(t.time),
+    type:t.phen==='HIGH'?'high':'low',
+    label:t.phen==='HIGH'?'مد':'جزر',
+    height:(t.height/100).toFixed(2)
+  }));
+}
+
+async function applyMaxAccuracyTide(lat,lon){
+  const s=getSettings();
+  const badge=document.getElementById('tideAccuracyBadge');
+  if(!s.maxAccuracy||!lastTideData){badge.style.display='none';return;}
+  try{
+    const odbToday=await fetchTidesODB(lat,lon,new Date());
+    if(!odbToday||!odbToday.length){badge.style.display='none';return;}
+    const now=new Date();
+    function averageWithNearest(omEvent){
+      if(!omEvent)return null;
+      const sameType=odbToday.filter(o=>o.type===omEvent.type);
+      if(!sameType.length)return omEvent;
+      const nearest=sameType.reduce((a,b)=>Math.abs(a.time-omEvent.time)<Math.abs(b.time-omEvent.time)?a:b);
+      const avgTime=new Date((omEvent.time.getTime()+nearest.time.getTime())/2);
+      const avgHeight=((parseFloat(omEvent.height)+parseFloat(nearest.height))/2).toFixed(2);
+      return {time:avgTime,type:omEvent.type,label:omEvent.label,height:avgHeight};
+    }
+    const mergedHigh=averageWithNearest(lastTideData.today.nextHigh);
+    const mergedLow=averageWithNearest(lastTideData.today.nextLow);
+    if(mergedHigh){
+      document.getElementById('nextHighTime').textContent=timeFa(mergedHigh.time.toISOString());
+      document.getElementById('nextHighHeight').textContent='ارتفاع: '+mergedHigh.height+' متر';
+    }
+    if(mergedLow){
+      document.getElementById('nextLowTime').textContent=timeFa(mergedLow.time.toISOString());
+      document.getElementById('nextLowHeight').textContent='ارتفاع: '+mergedLow.height+' متر';
+    }
+    badge.style.display='';
+  }catch(e){
+    console.error('Max accuracy tide error:',e);
+    badge.style.display='none';
+  }
+}
+
 async function renderTideSection(){
   const city=citySelect.value;
   const c=cities[city];
@@ -867,6 +918,7 @@ async function renderTideSection(){
     tableHTML+=`<div class="tide-table-row"><div>${isToday?'امروز':'فردا'}</div><div><span class="tide-badge ${t.type}">${t.label}</span></div><div>${timeFa(t.time.toISOString())}</div><div>${t.height} متر</div></div>`;
   });
   document.getElementById('tideTable').innerHTML=tableHTML;
+  applyMaxAccuracyTide(c.lat,c.lon).catch(()=>{});
 }
 const MAX_ACCURACY_MODELS=['ecmwf_ifs025','gfs_seamless','icon_seamless','meteofrance_seamless','gem_seamless'];
 async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
@@ -905,7 +957,7 @@ async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
-  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;const windEl=document.getElementById('wind');window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:windEl?windEl.textContent:'',rainText:''});},3000);}
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:'',rainText:''});},3000);}
   showSkeleton();
   setStatus("در حال دریافت دادههای زنده از Open-Meteo...");
   try{
@@ -1089,6 +1141,8 @@ document.getElementById('toggleMaxAccuracy').addEventListener('change',e=>{
     document.getElementById('maxAccuracyConfirm').classList.add('show');
   }else{
     saveSettings({maxAccuracy:false});
+    document.getElementById('maxAccuracyBadge').style.display='none';
+    document.getElementById('tideAccuracyBadge').style.display='none';
   }
 });
 document.getElementById('maxAccuracyEnableBtn').addEventListener('click',()=>{
