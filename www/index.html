@@ -236,7 +236,7 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 <div class="hero" id="heroCard">
   <div class="hero-top">
     <div class="hero-left">
-      <div class="city-name"><span class="live-dot"></span><span id="cityName">بندرعباس، هرمزگان</span></div>
+      <div class="city-name"><span class="live-dot"></span><span id="cityName">بندرعباس، هرمزگان</span><span id="maxAccuracyBadge" style="display:none;font-size:11px;font-weight:600;color:var(--accent-ocean);border:1px solid rgba(0,210,211,.4);border-radius:20px;padding:2px 8px;margin-right:6px">🌍 دقت حداکثری</span></div>
       <div class="date-str" id="dateStr">در حال دریافت اطلاعات...</div>
       <div class="desc" id="weatherDesc">—</div>
       <div class="feels">احساس دما: <span id="feelsLike">—</span></div>
@@ -266,7 +266,8 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
     <div class="tide-header">
       <span class="section-icon">🌊</span>
       <div class="section-title">جزر و مد <span style="font-size:14px;color:var(--text-dim);font-weight:400" id="tideCityLabel">بندرعباس</span></div>
-    </div
+    </div>
+    <div style="font-size:11px;color:var(--text-dim);opacity:.8;margin-bottom:12px;line-height:1.6">⚠️ این اطلاعات یک برآورد مدل‌محور است و داده رسمی نیست. برای تصمیم‌های ایمنی دریایی (قایق‌رانی، صید و...) حتماً از منابع رسمی سازمان بنادر و دریانوردی استفاده کنید.</div>
     
     <div class="tide-current">
       <div class="tide-current-state" id="tideCurrentState">
@@ -346,7 +347,7 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 <div class="status-bar" id="statusBar"><div class="status-dot"></div><span id="statusText">در حال اتصال...</span></div>
 </main>
 
-<footer><div style="opacity:.6">دادهها از Open-Meteo & Windy</div></footer>
+<footer><div id="footerTapZone" style="opacity:.6">دادهها از Open-Meteo & Windy</div></footer>
 
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-panel">
@@ -380,6 +381,27 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
     <div class="settings-group">
       <div class="settings-group-title">🔔 نوتیفیکیشن</div>
       <div class="toggle-row"><span>نمایش نوتیفیکیشن دائمی هوا</span><label class="toggle-switch"><input type="checkbox" id="toggleNotif"><span class="toggle-slider"></span></label></div>
+    </div>
+
+    <div class="settings-group" id="maxAccuracyGroup" style="display:none">
+      <div class="settings-group-title">🌍 حالت دقت حداکثری</div>
+      <div class="toggle-row"><span>ترکیب چند مدل هواشناسی</span><label class="toggle-switch"><input type="checkbox" id="toggleMaxAccuracy"><span class="toggle-slider"></span></label></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="maxAccuracyConfirm">
+  <div class="modal-panel">
+    <div class="modal-title">🌍 حالت دقت حداکثری</div>
+    <div style="font-size:14px;line-height:1.9;color:var(--text-dim)">
+      این قابلیت با استفاده و مقایسه‌ی چندین منبع و مدل هواشناسی، دقیق‌ترین وضعیت و پیش‌بینی ممکن را برای موقعیت شما محاسبه می‌کند.<br><br>
+      ⚠️ توجه: این حالت برای پردازش داده‌های بیشتر به منابع اینترنتی و توان پردازشی بیشتری نیاز دارد.<br><br>
+      اگر دستگاه شما قدیمی یا ضعیف است، استفاده از این قابلیت پیشنهاد نمی‌شود.<br><br>
+      آیا می‌خواهید حالت دقت حداکثری را فعال کنید؟
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button id="maxAccuracyEnableBtn" style="flex:1;background:var(--accent);border:none;color:#fff;padding:12px;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">فعال کردن 🌍</button>
+      <button id="maxAccuracyCancelBtn" style="flex:1;background:rgba(255,255,255,.08);border:1px solid var(--glass-border);color:var(--text);padding:12px;border-radius:var(--radius-sm);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer">لغو</button>
     </div>
   </div>
 </div>
@@ -847,6 +869,40 @@ async function renderTideSection(){
   });
   document.getElementById('tideTable').innerHTML=tableHTML;
 }
+const MAX_ACCURACY_MODELS=['ecmwf_ifs025','gfs_seamless','icon_seamless','meteofrance_seamless','gem_seamless'];
+async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
+  const s=getSettings();
+  const badge=document.getElementById('maxAccuracyBadge');
+  if(!s.maxAccuracy){badge.style.display='none';return;}
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&models=${MAX_ACCURACY_MODELS.join(',')}&timezone=auto&forecast_days=1`;
+    const res=await fetch(url,{cache:'no-store'});
+    if(!res.ok)throw new Error('multi-model fetch failed');
+    const d=await res.json();
+    const hourly=d.hourly;
+    if(!hourly||!hourly.time)throw new Error('bad multi-model response');
+    const idx=hourly.time.findIndex(t=>t>=refTimeIso);
+    const i=idx>=0?idx:0;
+    function avgFor(field){
+      const vals=MAX_ACCURACY_MODELS.map(m=>hourly[field+'_'+m]?.[i]).filter(v=>typeof v==='number'&&Number.isFinite(v));
+      if(!vals.length)return null;
+      return vals.reduce((a,b)=>a+b,0)/vals.length;
+    }
+    const avgTemp=avgFor('temperature_2m');
+    const avgHumidity=avgFor('relative_humidity_2m');
+    const avgWind=avgFor('wind_speed_10m');
+    if(avgTemp!=null){
+      document.getElementById('tempVal').textContent=Math.round(avgTemp);
+      document.getElementById('tempFeelsMini').textContent='میانگین '+MAX_ACCURACY_MODELS.length+' مدل';
+    }
+    if(avgHumidity!=null)document.getElementById('humidity').textContent=Math.round(avgHumidity)+'%';
+    if(avgWind!=null){document.getElementById('wind').textContent=Math.round(avgWind)+' km/h';setWindSpeed(avgWind);}
+    badge.style.display=(avgTemp!=null)?'':'none';
+  }catch(e){
+    console.error('Max accuracy mode error:',e);
+    badge.style.display='none';
+  }
+}
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
@@ -876,6 +932,7 @@ async function loadWeather(){
     setWindSpeed(cur.wind_speed_10m);
     document.getElementById("humidity").textContent=Math.round(cur.relative_humidity_2m)+"%";
     document.getElementById("wind").textContent=Math.round(cur.wind_speed_10m)+" km/h";
+    applyMaxAccuracyIfEnabled(c.lat,c.lon,cur.time).catch(()=>{});
     const hIdx=d.hourly.time.findIndex(t=>t>=cur.time);
     document.getElementById("rainProb").textContent=(d.hourly.precipitation_probability[hIdx]??0)+"%";
     document.getElementById("visibility").textContent=cur.visibility!=null?(Math.round(cur.visibility/100)/10)+" km":"—";
@@ -949,7 +1006,7 @@ const THEMES={
   sunset:{accent:'#ff9a3c',bg:'#170a08'}
 };
 function getSettings(){
-  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true,opacity:80};
+  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true,opacity:80,maxAccuracy:false};
   try{return Object.assign(def,JSON.parse(localStorage.getItem('havashenas_settings')||'{}'));}catch(e){return def;}
 }
 function applySettingsUI(){
@@ -961,6 +1018,8 @@ function applySettingsUI(){
   document.getElementById('toggleNotif').checked=s.notifEnabled;
   document.getElementById('opacitySlider').value=s.opacity;
   document.getElementById('opacityValue').textContent=s.opacity+'%';
+  document.getElementById('toggleMaxAccuracy').checked=s.maxAccuracy;
+  if(s.maxAccuracy)document.getElementById('maxAccuracyGroup').style.display='';
   applyTheme(s.theme);
 }
 function applyTheme(name){
@@ -1011,6 +1070,35 @@ document.getElementById('toggleTide').addEventListener('change',e=>saveSettings(
 document.getElementById('toggleNotif').addEventListener('change',e=>saveSettings({notifEnabled:e.target.checked}));
 document.getElementById('opacitySlider').addEventListener('input',e=>{document.getElementById('opacityValue').textContent=e.target.value+'%';});
 document.getElementById('opacitySlider').addEventListener('change',e=>saveSettings({opacity:Number(e.target.value)}));
+
+let footerTapCount=0,footerTapTimer=null;
+document.getElementById('footerTapZone').addEventListener('click',()=>{
+  footerTapCount++;
+  clearTimeout(footerTapTimer);
+  footerTapTimer=setTimeout(()=>{footerTapCount=0;},2000);
+  if(footerTapCount>=7){
+    footerTapCount=0;
+    document.getElementById('maxAccuracyGroup').style.display='';
+  }
+});
+document.getElementById('toggleMaxAccuracy').addEventListener('change',e=>{
+  if(e.target.checked){
+    e.target.checked=false;
+    document.getElementById('maxAccuracyConfirm').classList.add('show');
+  }else{
+    saveSettings({maxAccuracy:false});
+  }
+});
+document.getElementById('maxAccuracyEnableBtn').addEventListener('click',()=>{
+  document.getElementById('toggleMaxAccuracy').checked=true;
+  saveSettings({maxAccuracy:true});
+  document.getElementById('maxAccuracyConfirm').classList.remove('show');
+  loadWeather();
+});
+document.getElementById('maxAccuracyCancelBtn').addEventListener('click',()=>{
+  document.getElementById('maxAccuracyConfirm').classList.remove('show');
+});
+document.getElementById('maxAccuracyConfirm').addEventListener('click',e=>{if(e.target.id==='maxAccuracyConfirm')document.getElementById('maxAccuracyConfirm').classList.remove('show');});
 applyTheme(getSettings().theme);
 pushSettingsToNative(getSettings());
 
