@@ -905,7 +905,7 @@ async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
-  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:'',rainText:''});},3000);}
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;const windEl=document.getElementById('wind');window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:windEl?windEl.textContent:'',rainText:''});},3000);}
   showSkeleton();
   setStatus("در حال دریافت دادههای زنده از Open-Meteo...");
   try{
