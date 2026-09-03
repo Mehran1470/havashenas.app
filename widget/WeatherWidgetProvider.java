@@ -146,6 +146,7 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                     } catch (Exception ignore) {
                         timeOfDay = isDay ? "day" : "night";
                     }
+                    boolean isMoon = !isDay && (code == 0 || code == 1 || code == 2);
                     return new String[]{
                         Math.round(temp) + "°",
                         cityName,
@@ -154,10 +155,11 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                         Math.round(humidity) + "%",
                         Math.round(wind) + " km/h",
                         String.valueOf(iconForCode(code, wind, isDay)),
-                        timeOfDay
+                        timeOfDay,
+                        isMoon ? "1" : "0"
                     };
                 } catch (Exception e) {
-                    return new String[]{"—", cityName, "—", "\uD83C\uDF24\uFE0F", "—", "—", String.valueOf(R.drawable.ic_cloud), "day"};
+                    return new String[]{"—", cityName, "—", "\uD83C\uDF24\uFE0F", "—", "—", String.valueOf(R.drawable.ic_cloud), "day", "0"};
                 }
             }
 
@@ -170,7 +172,15 @@ public class WeatherWidgetProvider extends AppWidgetProvider {
                 views.setTextViewText(R.id.widget_humidity, "\uD83D\uDCA7 " + result[4]);
                 views.setTextViewText(R.id.widget_wind, "\uD83D\uDCA8 " + result[5]);
                 views.setTextViewText(R.id.widget_tide, "\uD83C\uDF0A " + (tideText == null || tideText.isEmpty() ? "—" : tideText));
-                views.setImageViewResource(R.id.widget_icon, Integer.parseInt(result[6]));
+                boolean isMoon = "1".equals(result[8]);
+                if(isMoon){
+                    views.setViewVisibility(R.id.widget_icon, View.GONE);
+                    views.setViewVisibility(R.id.widget_icon_emoji, View.VISIBLE);
+                } else {
+                    views.setViewVisibility(R.id.widget_icon, View.VISIBLE);
+                    views.setViewVisibility(R.id.widget_icon_emoji, View.GONE);
+                    views.setImageViewResource(R.id.widget_icon, Integer.parseInt(result[6]));
+                }
 
                 views.setViewVisibility(R.id.widget_stats_row, (showHumidity || showWind) ? View.VISIBLE : View.GONE);
                 views.setViewVisibility(R.id.widget_humidity, showHumidity ? View.VISIBLE : View.GONE);
