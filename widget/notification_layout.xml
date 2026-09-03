@@ -6,16 +6,16 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:background="@drawable/widget_background"
-    android:paddingStart="12dp"
-    android:paddingEnd="12dp">
+    android:paddingStart="14dp"
+    android:paddingEnd="14dp">
 
     <TextView
         android:id="@+id/notif_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="☀️"
-        android:textSize="22sp"
-        android:layout_marginEnd="10dp" />
+        android:textSize="30sp"
+        android:layout_marginEnd="12dp" />
 
     <LinearLayout
         android:layout_width="0dp"
@@ -29,30 +29,38 @@
             android:layout_height="wrap_content"
             android:text="بندرعباس"
             android:textColor="#1E2A4A"
-            android:textSize="12sp"
-            android:textStyle="bold"
+            android:textSize="11sp"
             android:maxLines="1"
             android:ellipsize="end" />
 
-        <TextView
-            android:id="@+id/notif_desc"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="—"
-            android:textColor="#1E2A4A"
-            android:textSize="10sp"
-            android:maxLines="1"
-            android:ellipsize="end" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/notif_temp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="—"
+                android:textColor="#1E2A4A"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:layout_marginEnd="6dp" />
+
+            <TextView
+                android:id="@+id/notif_desc"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="—"
+                android:textColor="#1E2A4A"
+                android:textSize="13sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+        </LinearLayout>
 
     </LinearLayout>
-
-    <TextView
-        android:id="@+id/notif_temp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="—"
-        android:textColor="#1E2A4A"
-        android:textSize="20sp"
-        android:textStyle="bold" />
 
 </LinearLayout>
