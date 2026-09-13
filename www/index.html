@@ -15,7 +15,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg-deep:#050d18;--glass-bg:rgba(255,255,255,0.06);--glass-border:rgba(255,255,255,0.12);--accent:#4facfe;--accent-warm:#ff9a3c;--accent-ocean:#00d2d3;--text:#ffffff;--text-dim:rgba(255,255,255,0.65);--shadow:0 8px 32px rgba(0,0,0,0.35);--radius:24px;--radius-sm:16px}
+:root{--bg-deep:#050d18;--glass-bg:rgba(255,255,255,0.06);--glass-border:rgba(255,255,255,0.12);--accent:#4facfe;--accent-warm:#ff9a3c;--accent-ocean:#00d2d3;--text:#ffffff;--text-dim:rgba(255,255,255,0.65);--shadow:0 8px 32px rgba(0,0,0,0.35);--radius:24px;--radius-sm:16px;--wx-glow:rgba(79,172,254,.15);--wx-border:rgba(255,255,255,0.12);--wx-card-tint:rgba(255,255,255,0.05)}
+body[data-weather="sunny"]{--wx-glow:rgba(255,196,102,.20);--wx-border:rgba(255,196,102,.26);--wx-card-tint:rgba(255,196,102,.05)}
+body[data-weather="cloudy"]{--wx-glow:rgba(184,199,216,.16);--wx-border:rgba(184,199,216,.22);--wx-card-tint:rgba(184,199,216,.05)}
+body[data-weather="rain"]{--wx-glow:rgba(0,210,211,.18);--wx-border:rgba(0,210,211,.24);--wx-card-tint:rgba(0,150,200,.05)}
+body[data-weather="storm"]{--wx-glow:rgba(139,124,230,.22);--wx-border:rgba(139,124,230,.3);--wx-card-tint:rgba(90,80,180,.06)}
+body[data-weather="snow"]{--wx-glow:rgba(214,232,255,.20);--wx-border:rgba(214,232,255,.26);--wx-card-tint:rgba(214,232,255,.05)}
+body[data-weather="night"]{--wx-glow:rgba(142,166,255,.16);--wx-border:rgba(142,166,255,.22);--wx-card-tint:rgba(142,166,255,.05)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{scroll-behavior:smooth}
 body{font-family:'Vazirmatn',Tahoma,sans-serif;background:var(--bg-deep);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6}
@@ -37,9 +43,10 @@ select option{background:#0a1628;color:#fff;font-family:inherit}
 
 .settings-btn{width:44px;height:44px;border-radius:14px;background:var(--glass-bg);border:1px solid var(--glass-border);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);transition:all .3s ease}
 .settings-btn:hover{background:rgba(255,255,255,.12);transform:rotate(30deg)}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay{position:fixed;inset:0;background:rgba(3,8,16,.55);backdrop-filter:blur(8px);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex}
-.modal-panel{background:#0e1c30;border:1px solid var(--glass-border);border-radius:var(--radius);padding:26px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.modal-panel{position:relative;background:linear-gradient(160deg,rgba(30,48,78,.65),rgba(10,20,36,.55));border:1px solid rgba(255,255,255,.16);border-radius:var(--radius);padding:26px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.12);backdrop-filter:blur(26px) saturate(150%);-webkit-backdrop-filter:blur(26px) saturate(150%)}
+.modal-panel::before{content:'';position:absolute;top:0;left:22px;right:22px;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent)}
 .modal-title{font-size:19px;font-weight:800;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
 .modal-close{background:rgba(255,255,255,.08);border:1px solid var(--glass-border);width:32px;height:32px;border-radius:50%;color:#fff;font-size:16px;cursor:pointer}
 .settings-group{margin-bottom:22px}
@@ -58,8 +65,8 @@ select option{background:#0a1628;color:#fff;font-family:inherit}
 .toggle-switch input:checked+.toggle-slider{background:var(--accent)}
 .toggle-switch input:checked+.toggle-slider::before{transform:translateX(20px)}
 
-.hero{position:relative;background:linear-gradient(135deg,var(--glass-bg),rgba(255,255,255,0.03));border:1px solid var(--glass-border);border-radius:var(--radius);padding:32px;margin-top:8px;backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;animation:fadeInUp .8s ease-out .1s both}
-.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:radial-gradient(circle,rgba(79,172,254,.15),transparent 70%);pointer-events:none}
+.hero{position:relative;background:linear-gradient(135deg,var(--wx-card-tint),rgba(255,255,255,0.03));border:1px solid var(--wx-border);border-radius:var(--radius);padding:32px;margin-top:8px;backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.09);overflow:hidden;animation:fadeInUp .8s ease-out .1s both;transition:border-color 1.2s ease,background 1.2s ease}
+.hero::before{content:'';position:absolute;top:-50%;right:-20%;width:400px;height:400px;background:radial-gradient(circle,var(--wx-glow),transparent 70%);pointer-events:none;transition:background 1.2s ease}
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
 .hero-left{flex:1;min-width:200px}
 .city-name{font-size:22px;font-weight:800;display:flex;align-items:center;gap:10px}
@@ -71,14 +78,25 @@ select option{background:#0a1628;color:#fff;font-family:inherit}
 .hero-right{text-align:center;position:relative;z-index:1}
 .weather-svg{width:140px;height:140px;margin:0 auto;filter:drop-shadow(0 10px 30px rgba(79,172,254,.25))}
 
+.moon-hero{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.moon-hero .moon-emoji{font-size:72px;line-height:1;animation:moonBob 4.5s ease-in-out infinite;filter:drop-shadow(0 0 16px rgba(180,200,255,.55)) drop-shadow(0 0 34px rgba(140,170,255,.32))}
+@keyframes moonBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.moon-hero .m-star{position:absolute;color:#d7e4ff;animation:starTwinkle 2.8s ease-in-out infinite;pointer-events:none}
+.moon-hero .m-star.s1{top:10%;right:22%;font-size:13px;animation-delay:.1s}
+.moon-hero .m-star.s2{bottom:16%;right:12%;font-size:10px;animation-delay:1s}
+.moon-hero .m-star.s3{top:22%;left:14%;font-size:15px;animation-delay:1.9s}
+@keyframes starTwinkle{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+@media(prefers-reduced-motion:reduce){.moon-hero .moon-emoji,.moon-hero .m-star{animation:none}}
+@media(max-width:600px){.moon-hero .moon-emoji{font-size:54px}}
+
 .temp-wrap{display:flex;align-items:flex-start;justify-content:center;gap:4px;margin-top:-10px;direction:ltr}
 .temp-main{font-size:80px;font-weight:900;line-height:1;letter-spacing:-2px;background:linear-gradient(180deg,#fff 30%,#8ec5ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 12px rgba(79,172,254,.3))}
 .temp-unit{font-size:28px;font-weight:300;color:var(--text-dim);margin-top:8px;opacity:.8}
 .temp-feels-mini{font-size:13px;color:var(--text-dim);margin-top:4px;letter-spacing:.5px}
 
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:28px}
-.stat-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:16px 10px;text-align:center;backdrop-filter:blur(12px);transition:all .3s ease;position:relative;overflow:hidden}
-.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity .3s}
+.stat-card{background:linear-gradient(160deg,var(--wx-card-tint),rgba(255,255,255,.02));border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:16px 10px;text-align:center;backdrop-filter:blur(12px);transition:all .3s ease,border-color 1.2s ease,background 1.2s ease;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--wx-border),transparent);opacity:0;transition:opacity .3s}
 .stat-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.25);border-color:rgba(255,255,255,.2)}
 .stat-card:hover::after{opacity:1}
 .stat-icon{font-size:24px;margin-bottom:6px;display:block}
@@ -87,7 +105,7 @@ select option{background:#0a1628;color:#fff;font-family:inherit}
 
 /* ===== TIDE SECTION ===== */
 .tide-section{margin:20px 0;animation:fadeInUp .8s ease-out .25s both}
-.tide-card{background:linear-gradient(135deg,rgba(0,210,211,.08),rgba(0,242,254,.04));border:1px solid rgba(0,210,211,.2);border-radius:var(--radius-sm);padding:16px 18px;backdrop-filter:blur(20px);box-shadow:var(--shadow),inset 0 1px 0 rgba(0,210,211,.08)}
+.tide-card{background:linear-gradient(135deg,rgba(0,210,211,.09),rgba(0,242,254,.04));border:1px solid rgba(0,210,211,.22);border-radius:var(--radius-sm);padding:16px 18px;backdrop-filter:blur(20px) saturate(140%);-webkit-backdrop-filter:blur(20px) saturate(140%);box-shadow:var(--shadow),inset 0 1px 0 rgba(0,230,220,.1)}
 .tide-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .tide-header .section-icon{font-size:18px}
 .tide-header .section-title{font-size:16px;font-weight:800}
@@ -267,6 +285,7 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
       <span class="section-icon">🌊</span>
       <div class="section-title">جزر و مد <span style="font-size:14px;color:var(--text-dim);font-weight:400" id="tideCityLabel">بندرعباس</span><span id="tideAccuracyBadge" style="display:none;font-size:11px;font-weight:600;color:var(--accent-ocean);border:1px solid rgba(0,210,211,.4);border-radius:20px;padding:2px 8px;margin-right:6px">🌍 دقت حداکثری</span></div>
     </div>
+    
     <div class="tide-current">
       <div class="tide-current-state" id="tideCurrentState">
         <span class="arrow" id="tideArrow">↗</span>
@@ -426,7 +445,7 @@ let storming=false;
 let windSpeed=0; // km/h, drives cloud drift speed & rain slant
 function setWindSpeed(kmh){windSpeed=Number(kmh)||0;}
 function setWeatherMode(code,isDay){
-  if(!isDay){mode='night';storming=false;return;}
+  if(!isDay){mode='night';storming=false;document.body.setAttribute('data-weather','night');return;}
   const rainCodes=[51,53,55,56,57,61,63,65,66,67,80,81,82];
   const snowCodes=[71,73,75,77,85,86];
   const stormCodes=[95,96,99];
@@ -435,6 +454,7 @@ function setWeatherMode(code,isDay){
   else if(snowCodes.includes(code)){mode='snow';storming=false;}
   else if(code===0){mode='sunny';storming=false;}
   else{mode='cloudy';storming=false;}
+  document.body.setAttribute('data-weather',storming?'storm':mode);
 }
 
 const SKY={
@@ -644,6 +664,54 @@ function updateMap(){
   iframe.onload=()=>setTimeout(()=>loader.classList.add('hidden'),900);
 }
 
+/* ===== SHARED REQUEST CACHE / DEDUPE / BACKOFF ===== */
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+async function fetchWithBackoff(url,opts={},maxRetries=3){
+  let attempt=0;
+  while(true){
+    let res;
+    try{ res=await fetch(url,opts); }
+    catch(networkErr){
+      if(attempt>=maxRetries)throw networkErr;
+      await sleep(500*Math.pow(2,attempt));attempt++;continue;
+    }
+    if(res.ok)return res;
+    if([429,500,502,503,504].includes(res.status)&&attempt<maxRetries){
+      const wait=res.status===429?2000*(attempt+1):500*Math.pow(2,attempt);
+      await sleep(wait);attempt++;continue;
+    }
+    return res;
+  }
+}
+function cachedAsync(store,key,ttlMs,fetchFn){
+  const now=Date.now();
+  let entry=store[key];
+  if(!entry){entry={data:null,ts:0,promise:null};store[key]=entry;}
+  if(entry.data&&(now-entry.ts)<ttlMs)return Promise.resolve(entry.data);
+  if(entry.promise)return entry.promise;
+  entry.promise=(async()=>{
+    try{
+      const result=await fetchFn();
+      entry.data=result;entry.ts=Date.now();
+      return result;
+    }catch(e){
+      console.error('cachedAsync error ['+key+']:',e);
+      if(entry.data)return entry.data;
+      throw e;
+    }finally{
+      entry.promise=null;
+    }
+  })();
+  return entry.promise;
+}
+
+function getHeroIcon(code,isDay){
+  if(code===0&&!isDay){
+    return '<div class="moon-hero"><span class="moon-emoji">🌙</span><span class="m-star s1">✦</span><span class="m-star s2">✧</span><span class="m-star s3">⋆</span></div>';
+  }
+  return getIcon(code,isDay);
+}
+
 function getIcon(code,isDay){
   const sun='<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="22" fill="#FFD700"/><g stroke="#FFD700" stroke-width="3" stroke-linecap="round"><line x1="50" y1="14" x2="50" y2="22"/><line x1="50" y1="78" x2="50" y2="86"/><line x1="14" y1="50" x2="22" y2="50"/><line x1="78" y1="50" x2="86" y2="50"/><line x1="24.5" y1="24.5" x2="30" y2="30"/><line x1="70" y1="70" x2="75.5" y2="75.5"/><line x1="24.5" y1="75.5" x2="30" y2="70"/><line x1="70" y1="30" x2="75.5" y2="24.5"/></g></svg>';
   const moon='<svg viewBox="0 0 100 100"><path d="M65 15A35 35 0 1 1 35 85A25 25 0 1 0 65 15Z" fill="#E8E8E8"/></svg>';
@@ -686,7 +754,7 @@ function moonPhase(date){
 
 async function fetchTidesAt(lat,lon){
   const api=`https://marine-api.open-meteo.com/v1/marine?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&hourly=sea_level_height_msl&past_hours=48&forecast_days=4&timezone=auto&cell_selection=sea`;
-  const res=await fetch(api,{cache:'no-store'});
+  const res=await fetchWithBackoff(api,{cache:'no-store'});
   if(!res.ok)return null;
   const data=await res.json();
   const times=data.hourly?.time||[];
@@ -709,15 +777,15 @@ async function fetchTidesRobust(lat,lon){
   return null;
 }
 
+const TIDE_TTL_MS=20*60*1000;
 let tideCoordCache={};
 async function fetchTides(date,lat,lon){
   const key=lat+','+lon;
-  let points=tideCoordCache[key];
-  if(!points){
-    points=await fetchTidesRobust(lat,lon);
-    if(!points)throw new Error('Tide data unavailable');
-    tideCoordCache[key]=points;
-  }
+  const points=await cachedAsync(tideCoordCache,key,TIDE_TTL_MS,async()=>{
+    const pts=await fetchTidesRobust(lat,lon);
+    if(!pts)throw new Error('Tide data unavailable');
+    return pts;
+  });
 
   const events=[];
   for(let i=1;i<points.length-1;i++){
@@ -820,7 +888,7 @@ function showDayDetail(idx){
 async function fetchTidesODB(lat,lon,dateObj){
   const dateStr=dateObj.toISOString().slice(0,10);
   const url=`https://eco.odb.ntu.edu.tw/api/tide/forecast?lon=${lon}&lat=${lat}&date=${dateStr}&tz=%2B03:30`;
-  const res=await fetch(url,{cache:'no-store'});
+  const res=await fetchWithBackoff(url,{cache:'no-store'});
   if(!res.ok)return null;
   const data=await res.json();
   const day=data.days&&data.days[0];
@@ -833,12 +901,20 @@ async function fetchTidesODB(lat,lon,dateObj){
   }));
 }
 
+const MAX_ACCURACY_TIDE_TTL=20*60*1000;
+const maxAccuracyTideStore={};
 async function applyMaxAccuracyTide(lat,lon){
   const s=getSettings();
   const badge=document.getElementById('tideAccuracyBadge');
   if(!s.maxAccuracy||!lastTideData){badge.style.display='none';return;}
+  const dayKey=new Date().toISOString().slice(0,10);
+  const key=lat.toFixed(2)+','+lon.toFixed(2)+','+dayKey;
   try{
-    const odbToday=await fetchTidesODB(lat,lon,new Date());
+    const odbToday=await cachedAsync(maxAccuracyTideStore,key,MAX_ACCURACY_TIDE_TTL,async()=>{
+      const pts=await fetchTidesODB(lat,lon,new Date());
+      if(!pts||!pts.length)throw new Error('ODB tide unavailable');
+      return pts;
+    });
     if(!odbToday||!odbToday.length){badge.style.display='none';return;}
     const now=new Date();
     function averageWithNearest(omEvent){
@@ -919,27 +995,30 @@ async function renderTideSection(){
   applyMaxAccuracyTide(c.lat,c.lon).catch(()=>{});
 }
 const MAX_ACCURACY_MODELS=['ecmwf_ifs025','gfs_seamless','icon_seamless','meteofrance_seamless','gem_seamless'];
+const MAX_ACCURACY_WEATHER_TTL=10*60*1000;
+const maxAccuracyWeatherStore={};
 async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
   const s=getSettings();
   const badge=document.getElementById('maxAccuracyBadge');
   if(!s.maxAccuracy){badge.style.display='none';return;}
+  const key=lat.toFixed(2)+','+lon.toFixed(2);
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&models=${MAX_ACCURACY_MODELS.join(',')}&timezone=auto&forecast_days=1`;
-    const res=await fetch(url,{cache:'no-store'});
-    if(!res.ok)throw new Error('multi-model fetch failed');
-    const d=await res.json();
-    const hourly=d.hourly;
-    if(!hourly||!hourly.time)throw new Error('bad multi-model response');
-    const idx=hourly.time.findIndex(t=>t>=refTimeIso);
-    const i=idx>=0?idx:0;
-    function avgFor(field){
-      const vals=MAX_ACCURACY_MODELS.map(m=>hourly[field+'_'+m]?.[i]).filter(v=>typeof v==='number'&&Number.isFinite(v));
-      if(!vals.length)return null;
-      return vals.reduce((a,b)=>a+b,0)/vals.length;
-    }
-    const avgTemp=avgFor('temperature_2m');
-    const avgHumidity=avgFor('relative_humidity_2m');
-    const avgWind=avgFor('wind_speed_10m');
+    const {avgTemp,avgHumidity,avgWind}=await cachedAsync(maxAccuracyWeatherStore,key,MAX_ACCURACY_WEATHER_TTL,async()=>{
+      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&models=${MAX_ACCURACY_MODELS.join(',')}&timezone=auto&forecast_days=1`;
+      const res=await fetchWithBackoff(url,{cache:'no-store'});
+      if(!res.ok)throw new Error('multi-model fetch failed');
+      const d=await res.json();
+      const hourly=d.hourly;
+      if(!hourly||!hourly.time)throw new Error('bad multi-model response');
+      const idx=hourly.time.findIndex(t=>t>=refTimeIso);
+      const i=idx>=0?idx:0;
+      function avgFor(field){
+        const vals=MAX_ACCURACY_MODELS.map(m=>hourly[field+'_'+m]?.[i]).filter(v=>typeof v==='number'&&Number.isFinite(v));
+        if(!vals.length)return null;
+        return vals.reduce((a,b)=>a+b,0)/vals.length;
+      }
+      return {avgTemp:avgFor('temperature_2m'),avgHumidity:avgFor('relative_humidity_2m'),avgWind:avgFor('wind_speed_10m')};
+    });
     if(avgTemp!=null){
       document.getElementById('tempVal').textContent=Math.round(avgTemp);
       document.getElementById('tempFeelsMini').textContent='میانگین '+MAX_ACCURACY_MODELS.length+' مدل';
@@ -952,17 +1031,26 @@ async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
     badge.style.display='none';
   }
 }
+const WEATHER_TTL_MS=10*60*1000;
+const weatherStore={};
+async function fetchWeatherData(city,c){
+  return cachedAsync(weatherStore,city,WEATHER_TTL_MS,async()=>{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,visibility,is_day&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset&timezone=auto&forecast_days=7`;
+    const res=await fetchWithBackoff(url,{cache:"no-store"});
+    if(!res.ok)throw new Error("API error: "+res.status);
+    return res.json();
+  });
+}
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
-  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:'',rainText:''});},3000);}
-  showSkeleton();
+  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;const windEl=document.getElementById('wind');window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:windEl?windEl.textContent:'',rainText:''});},3000);}
+  const isFreshCityView=!lastWeatherData||lastWeatherData._cityKey!==city;
+  if(isFreshCityView)showSkeleton();
   setStatus("در حال دریافت دادههای زنده از Open-Meteo...");
   try{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,visibility,is_day&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset&timezone=auto&forecast_days=7`;
-    const res=await fetch(url,{cache:"no-store"});
-    if(!res.ok)throw new Error("API error: "+res.status);
-    const d=await res.json();
+    const d=await fetchWeatherData(city,c);
+    d._cityKey=city;
     lastWeatherData=d;
     const cur=d.current;
     
@@ -976,7 +1064,7 @@ async function loadWeather(){
     document.getElementById("feelsLike").textContent=Math.round(cur.apparent_temperature)+"°C";
     document.getElementById("tempVal").textContent=Math.round(cur.temperature_2m);
     document.getElementById("tempFeelsMini").textContent="احساس "+Math.round(cur.apparent_temperature)+"°";
-    document.getElementById("weatherIcon").innerHTML=getIcon(cur.weather_code,cur.is_day!==0);
+    document.getElementById("weatherIcon").innerHTML=getHeroIcon(cur.weather_code,cur.is_day!==0);
     setWeatherMode(cur.weather_code,cur.is_day!==0);
     setWindSpeed(cur.wind_speed_10m);
     document.getElementById("humidity").textContent=Math.round(cur.relative_humidity_2m)+"%";
@@ -1029,22 +1117,25 @@ async function loadWeather(){
     // If a day was selected, refresh its detail
     if(selectedDayIndex>=0) showDayDetail(selectedDayIndex);
 
-    // Render tide section (isolated so a tide-only failure never breaks the rest of the page)
-    try{
-      await renderTideSection();
-    }catch(tideErr){
-      console.error("Tide render error:",tideErr);
-      const ts=document.getElementById('tideSection');
-      ts.style.display='block';
-      document.querySelector('#tideSection .tide-card').innerHTML='<div class="tide-header"><span class="section-icon">🌊</span><div class="section-title">جزر و مد</div></div><div style="color:var(--text-dim);font-size:13px;padding:8px 0">اطلاعات جزر و مد برای این شهر در دسترس نیست.</div>';
-    }
-
     setStatus("✅ دادههای زنده فعال است. اطلاعات از Open-Meteo دریافت میشود.");
     updateMap();
   }catch(e){
     console.error(e);
     setStatus("❌ خطا در دریافت اطلاعات. اتصال اینترنت را بررسی کنید.",true);
-    document.getElementById("weatherDesc").textContent="خطا در بارگذاری";
+    if(!lastWeatherData)document.getElementById("weatherDesc").textContent="خطا در بارگذاری";
+  }
+}
+
+async function refreshTide(){
+  try{
+    await renderTideSection();
+  }catch(tideErr){
+    console.error("Tide render error:",tideErr);
+    if(!lastTideData){
+      const ts=document.getElementById('tideSection');
+      ts.style.display='block';
+      document.querySelector('#tideSection .tide-card').innerHTML='<div class="tide-header"><span class="section-icon">🌊</span><div class="section-title">جزر و مد</div></div><div style="color:var(--text-dim);font-size:13px;padding:8px 0">اطلاعات جزر و مد برای این شهر در دسترس نیست.</div>';
+    }
   }
 }
 
@@ -1158,9 +1249,11 @@ applyTheme(getSettings().theme);
 pushSettingsToNative(getSettings());
 
 const savedCity=localStorage.getItem('havashenas_city');if(savedCity&&cities[savedCity]){citySelect.value=savedCity;}
-citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();});
+citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();refreshTide();});
 loadWeather();
+refreshTide();
 setInterval(loadWeather,10*60*1000);
+setInterval(refreshTide,20*60*1000);
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{
