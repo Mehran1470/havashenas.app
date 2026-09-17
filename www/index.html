@@ -1338,11 +1338,14 @@ function updateModeButtons(){
 function setAppMode(mode){
   localStorage.setItem('havashenas_appMode',mode);
   updateModeButtons();
+  const containerEl=document.querySelector('.container');
   if(mode==='advanced'){
     closeSettings();
+    if(containerEl)containerEl.style.display='none';
     openAdvanced();
   }else{
     document.getElementById('advOverlay').classList.remove('show');
+    if(containerEl)containerEl.style.display='';
   }
 }
 document.getElementById('modeSimpleBtn').addEventListener('click',()=>setAppMode('simple'));
@@ -1522,7 +1525,11 @@ document.getElementById('fullMapCloseBtn').addEventListener('click',()=>{
 });
 
 updateModeButtons();
-if(getAppMode()==='advanced')openAdvanced();
+if(getAppMode()==='advanced'){
+  const containerEl=document.querySelector('.container');
+  if(containerEl)containerEl.style.display='none';
+  openAdvanced();
+}
 
 const savedCity=localStorage.getItem('havashenas_city');if(savedCity&&cities[savedCity]){citySelect.value=savedCity;}
 citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();refreshTide();});
