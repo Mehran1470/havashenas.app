@@ -215,33 +215,47 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 
 .adv-overlay{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:'Vazirmatn',sans-serif;color:#fff;direction:ltr}
 .adv-overlay.show{display:flex}
-.adv-header{padding:22px 18px 4px;text-align:center;flex-shrink:0}
+.adv-header{padding:26px 18px 8px;text-align:center;flex-shrink:0}
 .adv-city{font-size:11px;letter-spacing:1.5px;opacity:.8;text-transform:uppercase}
-.adv-icon-wrap{margin-top:4px}
-.adv-temp{font-size:64px;font-weight:200;line-height:1;margin-top:2px;cursor:pointer}
-.adv-desc{font-size:13px;opacity:.85;margin-top:2px}
-.adv-hourly{padding:6px 16px 10px;display:flex;gap:14px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
-.adv-hourly>div{text-align:center;min-width:38px;flex:0 0 auto}
+.adv-icon-wrap{margin-top:6px}
+.adv-temp{font-size:64px;font-weight:200;line-height:1;margin-top:4px;cursor:pointer}
+.adv-desc{font-size:13px;opacity:.85;margin-top:4px}
+.adv-hourly{padding:10px 16px 14px;display:flex;gap:16px;overflow-x:auto;-webkit-overflow-scrolling:touch;flex-shrink:0}
+.adv-hourly>div{text-align:center;min-width:40px;flex:0 0 auto}
 .adv-hourly .h-time{font-size:10px;opacity:.7}
-.adv-hourly .h-temp{font-size:13px;margin-top:4px}
-.adv-grid{padding:0 16px 10px;display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.adv-card{background:rgba(255,255,255,.1);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);border-radius:16px;padding:12px;border:1px solid rgba(255,255,255,.16)}
-.adv-card-title{font-size:9px;opacity:.65;text-transform:uppercase;letter-spacing:.5px}
-.adv-card-val{font-size:19px;font-weight:500;margin-top:3px}
-.adv-card-ctx{font-size:10px;opacity:.6;margin-top:5px}
-.adv-daily{padding:0 16px 8px}
-.adv-daily-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:0.5px solid rgba(255,255,255,.12)}
+.adv-hourly .h-temp{font-size:13px;margin-top:6px}
+.adv-grid{padding:4px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.adv-card{background:rgba(255,255,255,.1);backdrop-filter:blur(18px) saturate(150%);-webkit-backdrop-filter:blur(18px) saturate(150%);border-radius:18px;padding:16px;border:1px solid rgba(255,255,255,.16)}
+.adv-card-title{font-size:10px;opacity:.65;text-transform:uppercase;letter-spacing:.5px}
+.adv-card-val{font-size:21px;font-weight:500;margin-top:6px}
+.adv-card-ctx{font-size:11px;opacity:.6;margin-top:8px}
+.adv-daily{padding:4px 16px 12px}
+.adv-daily-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:0.5px solid rgba(255,255,255,.12)}
 .adv-daily-row:first-child{border-top:none}
 .adv-bottom{padding:14px 18px 26px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
 .adv-icon-btn{width:36px;height:36px;border:none;background:rgba(255,255,255,.12);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .adv-icon-btn.map{border-radius:11px}
-.adv-icon-btn.menu{border-radius:50%}
+.adv-icon-btn.menu{border-radius:50%;position:relative}
 .adv-loading{margin:auto;text-align:center;font-size:13px;opacity:.8}
+
+.adv-menu-popup{position:absolute;bottom:52px;right:0;background:rgba(20,35,58,.85);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:1px solid rgba(255,255,255,.18);border-radius:14px;overflow:hidden;min-width:170px;box-shadow:0 12px 30px rgba(0,0,0,.4);display:none;z-index:5}
+.adv-menu-popup.show{display:block}
+.adv-menu-item{padding:12px 16px;font-size:13px;color:#fff;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.adv-menu-item:hover{background:rgba(255,255,255,.08)}
+.adv-menu-item:not(:last-child){border-bottom:0.5px solid rgba(255,255,255,.1)}
 
 .sheet-overlay{position:fixed;inset:0;background:rgba(3,8,16,.5);z-index:70;display:none;align-items:flex-end;justify-content:center}
 .sheet-overlay.show{display:flex}
-.sheet-panel{width:100%;max-width:480px;background:linear-gradient(160deg,rgba(30,48,78,.85),rgba(10,20,36,.9));backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);border-radius:24px 24px 0 0;padding:22px 18px 30px;border-top:1px solid rgba(255,255,255,.18);color:#fff;font-family:'Vazirmatn',sans-serif}
+.sheet-panel{width:100%;max-width:480px;background:linear-gradient(160deg,rgba(30,48,78,.85),rgba(10,20,36,.9));backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);border-radius:24px 24px 0 0;padding:22px 18px 30px;border-top:1px solid rgba(255,255,255,.18);color:#fff;font-family:'Vazirmatn',sans-serif;transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1)}
+.sheet-overlay.show .sheet-panel{transform:translateY(0)}
 .sheet-handle{width:36px;height:4px;border-radius:3px;background:rgba(255,255,255,.3);margin:0 auto 16px}
+.sheet-now-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.sheet-now-temp{font-size:28px;font-weight:300}
+.sheet-minmax{font-size:12px;opacity:.65;display:flex;gap:14px}
+#tempChartSvg polyline{stroke-dasharray:600;stroke-dashoffset:600;animation:sheetDraw 1s ease-out forwards}
+@keyframes sheetDraw{to{stroke-dashoffset:0}}
+#tempChartSvg circle.now-dot{opacity:0;animation:sheetDotIn .3s ease-out .8s forwards}
+@keyframes sheetDotIn{to{opacity:1}}
 
 .full-map-overlay{position:fixed;inset:0;z-index:80;background:#0a1628;display:none;flex-direction:column}
 .full-map-overlay.show{display:flex}
@@ -480,7 +494,13 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
 <div class="sheet-overlay" id="tempSheet">
   <div class="sheet-panel">
     <div class="sheet-handle"></div>
-    <div style="font-size:13px;opacity:.75;margin-bottom:10px">Today's temperature</div>
+    <div class="sheet-now-row">
+      <div>
+        <div style="font-size:13px;opacity:.75">Today's temperature</div>
+        <div class="sheet-now-temp" id="sheetNowTemp">—</div>
+      </div>
+      <div class="sheet-minmax" id="sheetMinMax"></div>
+    </div>
     <svg id="tempChartSvg" viewBox="0 0 320 120" style="width:100%;height:120px"></svg>
     <div id="tempChartLabels" style="display:flex;justify-content:space-between;font-size:10px;opacity:.6;margin-top:4px"></div>
   </div>
@@ -793,6 +813,8 @@ function getIcon(code,isDay){
   return isDay?sun:moon;
 }
 function wText(code){if(code===0)return"صاف";if([1,2].includes(code))return"کمی ابری";if(code===3)return"ابری";if([45,48].includes(code))return"مهآلود";if([51,53,55,56,57].includes(code))return"نمنم";if([61,63,65,66,67,80,81,82].includes(code))return"بارانی";if([71,73,75,77].includes(code))return"برفی";if([95,96,99].includes(code))return"رعدوبرق";return"نامشخص";}
+function advWText(code){if(code===0)return"Clear";if([1,2].includes(code))return"Partly Cloudy";if(code===3)return"Cloudy";if([45,48].includes(code))return"Foggy";if([51,53,55,56,57].includes(code))return"Light Rain";if([61,63,65,66,67,80,81,82].includes(code))return"Rainy";if([71,73,75,77].includes(code))return"Snowy";if([95,96,99].includes(code))return"Thunderstorm";return"Unknown";}
+const CITY_NAMES_EN={"بندرعباس":"Bandar Abbas","هرمز":"Hormuz","قشم":"Qeshm","میناب":"Minab","کیش":"Kish","بستک":"Bastak","حاجیآباد":"Hajiabad","رودان":"Rudan","جاسک":"Jask","ابوموسی":"Abu Musa"};
 function faDate(iso){return new Date(iso).toLocaleDateString("fa-IR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});}
 function timeFa(iso){return new Date(iso).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",hour12:false});}
 function dayName(iso){return new Date(iso).toLocaleDateString("fa-IR",{weekday:"long"});}
@@ -1463,7 +1485,7 @@ function renderAdvanced(data){
       <div class="adv-city">${data.cityName}</div>
       <div class="adv-icon-wrap">${advIcon(cur.weather_code,isDay)}</div>
       <div class="adv-temp" id="advTempTap">${Math.round(cur.temperature_2m)}°</div>
-      <div class="adv-desc">${wText(cur.weather_code)} · H:${Math.round(daily.temperature_2m_max[0])}° L:${Math.round(daily.temperature_2m_min[0])}°</div>
+      <div class="adv-desc">${advWText(cur.weather_code)} · H:${Math.round(daily.temperature_2m_max[0])}° L:${Math.round(daily.temperature_2m_min[0])}°</div>
     </div>
     <div class="adv-hourly">${hourlyHtml}</div>
     <div class="adv-grid">
@@ -1481,28 +1503,62 @@ function renderAdvanced(data){
     <div class="adv-daily">${dailyHtml}</div>
     <div class="adv-bottom">
       <button class="adv-icon-btn map" id="advMapBtn" aria-label="Open full map"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5-2V4l5 2 6-2 5 2v14l-5-2-6 2Z"/><path d="M9 6v14M15 4v14"/></svg></button>
-      <button class="adv-icon-btn menu" id="advMenuBtn" aria-label="Back to simple mode"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="adv-icon-btn menu" id="advMenuBtn" aria-label="Menu">
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        <div class="adv-menu-popup" id="advMenuPopup">
+          <div class="adv-menu-item" id="advMenuSettings">⚙️ Settings</div>
+          <div class="adv-menu-item" id="advMenuSimple">🔄 Switch to Simple</div>
+        </div>
+      </button>
     </div>
   `;
 
-  document.getElementById('advTempTap').addEventListener('click',()=>openTempSheet(hourly,start));
+  document.getElementById('advTempTap').addEventListener('click',()=>openTempSheet(hourly,start,cur));
   document.getElementById('advMapBtn').addEventListener('click',()=>openFullMap(data.lat,data.lon));
-  document.getElementById('advMenuBtn').addEventListener('click',()=>setAppMode('simple'));
+  document.getElementById('advMenuBtn').addEventListener('click',e=>{
+    e.stopPropagation();
+    document.getElementById('advMenuPopup').classList.toggle('show');
+  });
+  document.getElementById('advMenuSettings').addEventListener('click',e=>{
+    e.stopPropagation();
+    document.getElementById('advMenuPopup').classList.remove('show');
+    openSettings();
+  });
+  document.getElementById('advMenuSimple').addEventListener('click',e=>{
+    e.stopPropagation();
+    setAppMode('simple');
+  });
+  document.addEventListener('click',()=>{
+    const p=document.getElementById('advMenuPopup');
+    if(p)p.classList.remove('show');
+  });
 }
 
-function openTempSheet(hourly,start){
+function openTempSheet(hourly,start,cur){
   const sheet=document.getElementById('tempSheet');
   sheet.classList.add('show');
   const temps=hourly.temperature_2m.slice(start,start+24);
   const times=hourly.time.slice(start,start+24);
   const min=Math.min(...temps),max=Math.max(...temps);
   const w=320,h=100,pad=6;
-  const pts=temps.map((t,i)=>{
+  const coords=temps.map((t,i)=>{
     const x=(i/(temps.length-1))*w;
     const y=pad+(1-(t-min)/((max-min)||1))*(h-pad*2);
-    return x+','+y;
-  }).join(' ');
-  document.getElementById('tempChartSvg').innerHTML=`<polyline points="${pts}" fill="none" stroke="#8fc2e8" stroke-width="2.5"/>`;
+    return{x,y};
+  });
+  const pts=coords.map(p=>p.x+','+p.y).join(' ');
+  const areaPts=`0,${h} ${pts} ${w},${h}`;
+  document.getElementById('tempChartSvg').innerHTML=`
+    <defs><linearGradient id="tempFillGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8fc2e8" stop-opacity=".35"/>
+      <stop offset="100%" stop-color="#8fc2e8" stop-opacity="0"/>
+    </linearGradient></defs>
+    <polygon points="${areaPts}" fill="url(#tempFillGrad)" stroke="none"/>
+    <polyline points="${pts}" fill="none" stroke="#8fc2e8" stroke-width="2.5"/>
+    <circle class="now-dot" cx="${coords[0].x}" cy="${coords[0].y}" r="4" fill="#fff"/>
+  `;
+  document.getElementById('sheetNowTemp').textContent=(cur?Math.round(cur.temperature_2m):Math.round(temps[0]))+'°';
+  document.getElementById('sheetMinMax').innerHTML=`<span>↓ ${Math.round(min)}°</span><span>↑ ${Math.round(max)}°</span>`;
   const labels=document.getElementById('tempChartLabels');
   labels.innerHTML='';
   [0,6,12,18,23].forEach(i=>{
@@ -1521,28 +1577,4 @@ function openFullMap(lat,lon){
 }
 document.getElementById('fullMapCloseBtn').addEventListener('click',()=>{
   document.getElementById('fullMapOverlay').classList.remove('show');
-  document.getElementById('fullMapFrame').src='';
-});
-
-updateModeButtons();
-if(getAppMode()==='advanced'){
-  const containerEl=document.querySelector('.container');
-  if(containerEl)containerEl.style.display='none';
-  openAdvanced();
-}
-
-const savedCity=localStorage.getItem('havashenas_city');if(savedCity&&cities[savedCity]){citySelect.value=savedCity;}
-citySelect.addEventListener("change",()=>{localStorage.setItem('havashenas_city',citySelect.value);loadWeather();refreshTide();});
-loadWeather();
-refreshTide();
-setInterval(loadWeather,10*60*1000);
-setInterval(refreshTide,20*60*1000);
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>{
-    navigator.serviceWorker.register("sw.js").catch(()=>{});
-  });
-}
-</script>
-</body>
-</html>
+  doc
