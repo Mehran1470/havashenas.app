@@ -110,7 +110,7 @@ public class WeatherNotificationService extends Service {
             String humidityText = prefs.getString("humidity_text", "");
             try {
                 String body = httpGet("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
-                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"");
+                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day");
                 JSONObject json = new JSONObject(body);
                 JSONObject current = json.getJSONObject("current");
                 double temp = current.getDouble("temperature_2m");
