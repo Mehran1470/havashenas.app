@@ -126,7 +126,7 @@ public class WeatherNotificationService extends Service {
                 if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
-                                cityName, tempText, desc, iconForCode(code, wind, isDay), windText);
+                                cityName, tempText, desc, iconForCode(code, wind, isDay), windText, circleColor(code, wind, isDay));
                     } catch (Throwable t) {
                         notif = null;
                     }
@@ -187,6 +187,17 @@ public class WeatherNotificationService extends Service {
         if (code == 1 || code == 2) return isDay ? R.drawable.ic_partly_day : R.drawable.ic_partly_night;
         if (code == 0) return isDay ? R.drawable.ic_sun : R.drawable.ic_moon_star;
         return R.drawable.ic_cloud;
+    }
+
+    /** Circle color: changes with day/night and weather. */
+    private int circleColor(int code, double wind, boolean isDay) {
+        if (code == 95) return 0xFF4A3F78;
+        if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return 0xFF2F5D8A;
+        if (code >= 71 && code <= 75) return 0xFF6C8EAD;
+        if (wind >= 30) return 0xFF3E7C8C;
+        if (code == 45 || code == 48 || code == 3) return 0xFF5B6B7A;
+        if (code == 1 || code == 2) return isDay ? 0xFF4A90D9 : 0xFF3949AB;
+        return isDay ? 0xFF1E88E5 : 0xFF283593;
     }
 
     /** The original notification (custom colored layout). Used on every phone below Android 16. */
