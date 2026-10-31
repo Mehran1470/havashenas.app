@@ -18,16 +18,12 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-import java.util.TimeZone;
 
 public class WeatherNotificationService extends Service {
 
@@ -35,15 +31,6 @@ public class WeatherNotificationService extends Service {
     private static final int NOTIF_ID = 501;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateTask;
-
-    /** Sunrise/sunset window around "now": [start, end] in epoch ms, plus whether it is daytime. */
-    private static class SunWindow {
-        long start;
-        long end;
-        boolean isDay;
-        String sunriseText;
-        String sunsetText;
-    }
 
     @Override
     public void onCreate() {
@@ -123,8 +110,7 @@ public class WeatherNotificationService extends Service {
             String humidityText = prefs.getString("humidity_text", "");
             try {
                 String body = httpGet("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
-                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"
-                        + "&daily=sunrise,sunset&past_days=1&forecast_days=2&timezone=auto");
+                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"");
                 JSONObject json = new JSONObject(body);
                 JSONObject current = json.getJSONObject("current");
                 double temp = current.getDouble("temperature_2m");
@@ -139,20 +125,8 @@ public class WeatherNotificationService extends Service {
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
                 if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
                     try {
-                        SunWindow sun = findSunWindow(json);
-                        if (sun != null) {
-                            long now = System.currentTimeMillis();
-                            int progress = (int) Math.round(100.0 * (now - sun.start) / (double) (sun.end - sun.start));
-                            StringBuilder extras = new StringBuilder();
-                            if (!windText.isEmpty()) extras.append("💨 ").append(windText);
-                            if (!tideText.isEmpty()) {
-                                if (extras.length() > 0) extras.append(" • ");
-                                extras.append("🌊 ").append(tideText);
-                            }
-                            notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
-                                    cityName, tempText, desc, emoji, iconForCode(code, wind, isDay), sun.isDay, progress,
-                                    sun.sunriseText, sun.sunsetText, extras.toString());
-                        }
+                        notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
+                                cityName, tempText, desc, iconForCode(code, wind, isDay), windText);
                     } catch (Throwable t) {
                         notif = null;
                     }
@@ -165,47 +139,6 @@ public class WeatherNotificationService extends Service {
             } catch (Exception e) {
             }
         }).start();
-    }
-
-    /**
-     * Finds the daylight window (sunrise to sunset) or night window (sunset to next sunrise)
-     * that contains "now", using Open-Meteo daily data (yesterday, today, tomorrow).
-     */
-    private SunWindow findSunWindow(JSONObject json) throws Exception {
-        long offsetMs = json.optLong("utc_offset_seconds", 0) * 1000L;
-        JSONObject daily = json.getJSONObject("daily");
-        JSONArray rise = daily.getJSONArray("sunrise");
-        JSONArray set = daily.getJSONArray("sunset");
-        int n = Math.min(rise.length(), set.length());
-        long[] sunrise = new long[n];
-        long[] sunset = new long[n];
-        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm", Locale.US);
-        fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
-        for (int i = 0; i < n; i++) {
-            sunrise[i] = fmt.parse(rise.getString(i)).getTime() - offsetMs;
-            sunset[i] = fmt.parse(set.getString(i)).getTime() - offsetMs;
-        }
-        long now = System.currentTimeMillis();
-        for (int i = 0; i < n; i++) {
-            SunWindow w = new SunWindow();
-            if (now >= sunrise[i] && now < sunset[i]) {
-                w.start = sunrise[i];
-                w.end = sunset[i];
-                w.isDay = true;
-                w.sunriseText = rise.getString(i).substring(11, 16);
-                w.sunsetText = set.getString(i).substring(11, 16);
-                return w;
-            }
-            if (i + 1 < n && now >= sunset[i] && now < sunrise[i + 1]) {
-                w.start = sunset[i];
-                w.end = sunrise[i + 1];
-                w.isDay = false;
-                w.sunriseText = rise.getString(i + 1).substring(11, 16);
-                w.sunsetText = set.getString(i).substring(11, 16);
-                return w;
-            }
-        }
-        return null;
     }
 
     private PendingIntent openAppIntent() {

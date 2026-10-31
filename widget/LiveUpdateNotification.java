@@ -4,14 +4,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.graphics.drawable.Icon;
-
-import java.util.Arrays;
 
 /**
- * Android 16+ (API 36) Live Update notification, shown by One UI 8 in the Now Bar.
- * This class is only ever touched when Build.VERSION.SDK_INT >= 36,
- * so older phones never load it.
+ * Android 16+ (API 36) compact Live Update, shown by One UI 8 as a small capsule in the Now Bar.
+ * Only used when Build.VERSION.SDK_INT >= 36.
  */
 final class LiveUpdateNotification {
 
@@ -24,42 +20,20 @@ final class LiveUpdateNotification {
     }
 
     static Notification build(Context ctx, String channelId, PendingIntent pendingIntent,
-                              String city, String temp, String desc, String emoji,
-                              int smallIconRes, boolean isDay, int progressPercent,
-                              String sunriseText, String sunsetText, String extras) {
-
-        int progress = Math.max(1, Math.min(99, progressPercent));
-        int doneColor = isDay ? 0xFFFFB300 : 0xFF7986CB;
-        int restColor = isDay ? 0x55FFB300 : 0x557986CB;
-        int trackerRes = isDay ? R.drawable.ic_sun : R.drawable.ic_moon_star;
-
-        Notification.ProgressStyle style = new Notification.ProgressStyle()
-                .setStyledByProgress(false)
-                .setProgress(progress)
-                .setProgressTrackerIcon(Icon.createWithResource(ctx, trackerRes))
-                .setProgressSegments(Arrays.asList(
-                        new Notification.ProgressStyle.Segment(progress).setColor(doneColor),
-                        new Notification.ProgressStyle.Segment(100 - progress).setColor(restColor)));
-
-        StringBuilder text = new StringBuilder(desc);
-        if (sunriseText != null && sunsetText != null) {
-            text.append(" • ☀️ ").append(sunriseText).append(" → ").append(sunsetText);
-        }
-        if (extras != null && !extras.isEmpty()) {
-            text.append(" • ").append(extras);
-        }
+                              String city, String temp, String desc, int smallIconRes, String windText) {
+        String text = desc;
+        if (windText != null && !windText.isEmpty()) text += " \u2022 " + windText;
 
         return new Notification.Builder(ctx, channelId)
                 .setSmallIcon(smallIconRes)
-                .setContentTitle(emoji + " " + city + " " + temp)
-                .setContentText(text.toString())
+                .setContentTitle(city + " " + temp)
+                .setContentText(text)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setShowWhen(false)
                 .setShortCriticalText(temp)
                 .setRequestPromotedOngoing(true)
-                .setStyle(style)
                 .build();
     }
 }
