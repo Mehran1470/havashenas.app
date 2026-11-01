@@ -35,6 +35,8 @@ final class LiveUpdateNotification {
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setShowWhen(false)
+                .setNumber(0)
+                .setBadgeIconType(Notification.BADGE_ICON_NONE)
                 .setShortCriticalText(temp);
         requestPromotion(b);
         return b.build();

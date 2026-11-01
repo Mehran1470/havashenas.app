@@ -566,6 +566,8 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
     <div class="settings-group">
       <div class="settings-group-title">🔔 نوتیفیکیشن</div>
       <div class="toggle-row"><span>نمایش نوتیفیکیشن دائمی هوا</span><label class="toggle-switch"><input type="checkbox" id="toggleNotif"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span>Live Notification (Now Bar)</span><label class="toggle-switch"><input type="checkbox" id="toggleLive"><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row" style="font-size:12px;opacity:.7"><span id="liveStateText"></span></div>
     </div>
 
     <div class="settings-group" id="maxAccuracyGroup" style="display:none">
@@ -629,6 +631,8 @@ footer{text-align:center;padding:40px 0 20px;color:rgba(255,255,255,.35);font-si
       <div class="adv-set-label">Notification</div>
       <div class="adv-set-group">
         <div class="adv-set-row"><span>Persistent weather notification</span><label class="adv-toggle"><input type="checkbox" id="advSetNotif"><i></i></label></div>
+        <div class="adv-set-row"><span>Live Notification (Now Bar)</span><label class="adv-toggle"><input type="checkbox" id="advSetLive"><i></i></label></div>
+        <div class="adv-set-note" id="advLiveStateText"></div>
       </div>
       <div class="adv-set-label">Accuracy</div>
       <div class="adv-set-group">
@@ -1392,7 +1396,7 @@ const THEMES={
   sunset:{accent:'#ff9a3c',bg:'#170a08'}
 };
 function getSettings(){
-  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true,opacity:80,maxAccuracy:false};
+  const def={theme:'blue',showHumidity:true,showWind:true,showTide:true,notifEnabled:true,liveNotif:true,opacity:80,maxAccuracy:false};
   try{return Object.assign(def,JSON.parse(localStorage.getItem('havashenas_settings')||'{}'));}catch(e){return def;}
 }
 function applySettingsUI(){
@@ -1402,6 +1406,7 @@ function applySettingsUI(){
   document.getElementById('toggleWind').checked=s.showWind;
   document.getElementById('toggleTide').checked=s.showTide;
   document.getElementById('toggleNotif').checked=s.notifEnabled;
+  document.getElementById('toggleLive').checked=s.liveNotif;
   document.getElementById('opacitySlider').value=s.opacity;
   document.getElementById('opacityValue').textContent=s.opacity+'%';
   document.getElementById('toggleMaxAccuracy').checked=s.maxAccuracy;
@@ -1415,10 +1420,22 @@ function applyTheme(name){
 function pushSettingsToNative(s){
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){
     window.Capacitor.Plugins.CityWidget.setPrefs({
-      theme:s.theme,showHumidity:s.showHumidity,showWind:s.showWind,showTide:s.showTide,notifEnabled:s.notifEnabled,opacity:s.opacity
+      theme:s.theme,showHumidity:s.showHumidity,showWind:s.showWind,showTide:s.showTide,notifEnabled:s.notifEnabled,liveNotif:s.liveNotif,opacity:s.opacity
     });
   }
 }
+function refreshLiveState(){
+  const set=t=>{['liveStateText','advLiveStateText'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=t;});};
+  const P=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget;
+  if(!P||!P.getLiveState){set('');return;}
+  P.getLiveState().then(r=>{
+    if(!r.supported){set('Live Notification نیاز به اندروید ۱۶ دارد');}
+    else if(!r.enabled){set('Live Notification خاموش است');}
+    else if(r.active){set('Live Notification فعال شد');}
+    else{set('برای نمایش در Now Bar، در تنظیمات گوشی Live notifications را برای این اپ روشن کنید');}
+  }).catch(()=>set(''));
+}
+setTimeout(refreshLiveState,4000);
 function computeTimeOfDay(now,sunriseIso,sunsetIso){
   if(!sunriseIso||!sunsetIso)return 'day';
   const sunrise=new Date(sunriseIso),sunset=new Date(sunsetIso);
@@ -1454,6 +1471,7 @@ document.getElementById('toggleHumidity').addEventListener('change',e=>saveSetti
 document.getElementById('toggleWind').addEventListener('change',e=>saveSettings({showWind:e.target.checked}));
 document.getElementById('toggleTide').addEventListener('change',e=>saveSettings({showTide:e.target.checked}));
 document.getElementById('toggleNotif').addEventListener('change',e=>saveSettings({notifEnabled:e.target.checked}));
+document.getElementById('toggleLive').addEventListener('change',e=>{saveSettings({liveNotif:e.target.checked});setTimeout(refreshLiveState,2500);});
 document.getElementById('opacitySlider').addEventListener('input',e=>{document.getElementById('opacityValue').textContent=e.target.value+'%';});
 document.getElementById('opacitySlider').addEventListener('change',e=>saveSettings({opacity:Number(e.target.value)}));
 
@@ -2138,6 +2156,7 @@ function advSettingsSync(){
   document.getElementById('advSetWind').checked=s.showWind;
   document.getElementById('advSetTide').checked=s.showTide;
   document.getElementById('advSetNotif').checked=s.notifEnabled;
+  document.getElementById('advSetLive').checked=s.liveNotif;
   document.getElementById('advSetAcc').checked=!!s.maxAccuracy;
   document.getElementById('advSetOpacity').value=s.opacity;
   document.getElementById('advSetOpacityVal').textContent=s.opacity+'%';
@@ -2161,6 +2180,7 @@ document.getElementById('advSetHum').addEventListener('change',e=>saveSettings({
 document.getElementById('advSetWind').addEventListener('change',e=>saveSettings({showWind:e.target.checked}));
 document.getElementById('advSetTide').addEventListener('change',e=>saveSettings({showTide:e.target.checked}));
 document.getElementById('advSetNotif').addEventListener('change',e=>saveSettings({notifEnabled:e.target.checked}));
+document.getElementById('advSetLive').addEventListener('change',e=>{saveSettings({liveNotif:e.target.checked});setTimeout(refreshLiveState,2500);});
 document.getElementById('advSetOpacity').addEventListener('input',e=>{document.getElementById('advSetOpacityVal').textContent=e.target.value+'%';});
 document.getElementById('advSetOpacity').addEventListener('change',e=>saveSettings({opacity:Number(e.target.value)}));
 document.querySelectorAll('#advSwatches .adv-sw').forEach(el=>el.addEventListener('click',()=>{
