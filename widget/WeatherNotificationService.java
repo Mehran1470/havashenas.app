@@ -126,7 +126,9 @@ public class WeatherNotificationService extends Service {
                 if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
-                                cityName, tempText, desc, iconForCode(code, wind, isDay), windText, circleColor(code, wind, isDay));
+                                cityName, tempText, englishWord(code, wind, isDay), iconForCode(code, wind, isDay),
+                                WeatherBubble.create(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay), 192),
+                                circleColor(code, wind, isDay));
                     } catch (Throwable t) {
                         notif = null;
                     }
@@ -187,6 +189,32 @@ public class WeatherNotificationService extends Service {
         if (code == 1 || code == 2) return isDay ? R.drawable.ic_partly_day : R.drawable.ic_partly_night;
         if (code == 0) return isDay ? R.drawable.ic_sun : R.drawable.ic_moon_star;
         return R.drawable.ic_cloud;
+    }
+
+    private String englishWord(int code, double wind, boolean isDay) {
+        if (code == 95) return "Storm";
+        if (code >= 80 && code <= 82) return "Showers";
+        if (code >= 61 && code <= 65) return "Rain";
+        if (code >= 51 && code <= 55) return "Drizzle";
+        if (wind >= 30) return "Windy";
+        if (code == 45 || code == 48) return "Foggy";
+        if (code >= 71 && code <= 75) return "Snow";
+        if (code == 3) return "Overcast";
+        if (code == 1 || code == 2) return "Cloudy";
+        if (code == 0) return isDay ? "Sunny" : "Clear";
+        return "Weather";
+    }
+
+    private String kindForCode(int code, double wind, boolean isDay) {
+        if (code == 95) return "storm";
+        if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return "rain";
+        if (wind >= 30) return "wind";
+        if (code == 45 || code == 48) return "fog";
+        if (code >= 71 && code <= 75) return "snow";
+        if (code == 3) return "cloud";
+        if (code == 1 || code == 2) return "partly";
+        if (code == 0) return isDay ? "sun" : "moon";
+        return "cloud";
     }
 
     /** Circle color: changes with day/night and weather. */
