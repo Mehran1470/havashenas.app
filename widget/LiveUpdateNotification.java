@@ -5,7 +5,6 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.Bitmap;
 
 /**
  * Android 16+ (API 36) compact Live Update, shown by One UI 8 as a small capsule in the Now Bar.
