@@ -8,6 +8,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -15,6 +16,7 @@ import android.os.Looper;
 import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.ServiceCompat;
 
 import org.json.JSONObject;
 
@@ -38,7 +40,12 @@ public class WeatherNotificationService extends Service {
         String theme = prefs.getString("theme", "blue");
         boolean notifEnabled = prefs.getBoolean("notif_enabled", true);
 
-        startForeground(NOTIF_ID, buildNotification("بندرعباس", "—", "—", "☀️", theme, "", "", ""));
+        Notification first = buildLegacyNotification("بندرعباس", "—", "—", "☀️", theme, "", "", "");
+        if (Build.VERSION.SDK_INT >= 34) {
+            ServiceCompat.startForeground(this, NOTIF_ID, first, ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE);
+        } else {
+            startForeground(NOTIF_ID, first);
+        }
 
         if (!notifEnabled) {
             stopForeground(true);
@@ -68,6 +75,22 @@ public class WeatherNotificationService extends Service {
         handler.post(updateTask);
     }
 
+    private String httpGet(String address) throws Exception {
+        HttpURLConnection conn = (HttpURLConnection) new URL(address).openConnection();
+        try {
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+            return sb.toString();
+        } finally {
+            conn.disconnect();
+        }
+    }
+
     private void fetchAndUpdate() {
         new Thread(() -> {
             SharedPreferences prefs = getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
@@ -86,16 +109,10 @@ public class WeatherNotificationService extends Service {
             String windText = prefs.getString("wind_text", "");
             String humidityText = prefs.getString("humidity_text", "");
             try {
-                URL url = new URL("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon + "&current=temperature_2m,weather_code,wind_speed_10m,is_day");
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) sb.append(line);
-                reader.close();
-                JSONObject json = new JSONObject(sb.toString());
+                String body = httpGet("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
+                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"
+                        + "&hourly=precipitation_probability&forecast_hours=1&timezone=auto");
+                JSONObject json = new JSONObject(body);
                 JSONObject current = json.getJSONObject("current");
                 double temp = current.getDouble("temperature_2m");
                 double wind = current.getDouble("wind_speed_10m");
@@ -103,12 +120,38 @@ public class WeatherNotificationService extends Service {
                 boolean isDay = current.getInt("is_day") == 1;
                 String desc = describeCode(code, wind, isDay);
                 String emoji = emojiForCode(code, wind, isDay);
-                Notification notif = buildNotification(cityName, Math.round(temp) + "°", desc, emoji, theme, tideText, windText, humidityText);
+                String tempText = Math.round(temp) + "°";
+                int rainPct = 0;
+                try {
+                    rainPct = json.getJSONObject("hourly").getJSONArray("precipitation_probability").optInt(0, 0);
+                } catch (Exception ignored) { }
+                String line2 = "باد " + Math.round(wind) + " km/h  |  بارش " + rainPct + "%";
+
+                Notification notif = null;
+                // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
+                if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
+                    try {
+                        notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
+                                cityName, tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
+                                bubbleFor(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay)),
+                                circleColor(code, wind, isDay));
+                    } catch (Throwable t) {
+                        notif = null;
+                    }
+                }
+                if (notif == null) {
+                    notif = buildLegacyNotification(cityName, tempText, desc, emoji, theme, tideText, windText, humidityText);
+                }
                 NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 manager.notify(NOTIF_ID, notif);
             } catch (Exception e) {
             }
         }).start();
+    }
+
+    private PendingIntent openAppIntent() {
+        Intent intent = new Intent(this, MainActivity.class);
+        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
     private String describeCode(int code, double wind, boolean isDay) {
@@ -126,20 +169,92 @@ public class WeatherNotificationService extends Service {
     }
 
     private String emojiForCode(int code, double wind, boolean isDay) {
-        if (code == 95) return "\u26C8\uFE0F";
-        if (code >= 80 && code <= 82) return "\uD83C\uDF27\uFE0F";
-        if (code >= 61 && code <= 65) return "\uD83C\uDF27\uFE0F";
-        if (code >= 51 && code <= 55) return "\uD83C\uDF26\uFE0F";
-        if (wind >= 30) return "\uD83D\uDCA8";
-        if (code == 45 || code == 48) return "\uD83C\uDF2B\uFE0F";
-        if (code >= 71 && code <= 75) return "\u2744\uFE0F";
-        if (code == 3) return "\u2601\uFE0F";
-        if (code == 1 || code == 2) return isDay ? "\u26C5" : "\uD83C\uDF19";
-        if (code == 0) return isDay ? "\u2600\uFE0F" : "\uD83C\uDF19";
-        return "\uD83C\uDF24\uFE0F";
+        if (code == 95) return "⛈️";
+        if (code >= 80 && code <= 82) return "🌧️";
+        if (code >= 61 && code <= 65) return "🌧️";
+        if (code >= 51 && code <= 55) return "🌦️";
+        if (wind >= 30) return "💨";
+        if (code == 45 || code == 48) return "🌫️";
+        if (code >= 71 && code <= 75) return "❄️";
+        if (code == 3) return "☁️";
+        if (code == 1 || code == 2) return isDay ? "⛅" : "🌙";
+        if (code == 0) return isDay ? "☀️" : "🌙";
+        return "🌤️";
     }
 
-    private Notification buildNotification(String city, String temp, String desc, String emoji, String theme, String tideText, String windText, String humidityText) {
+    /** Status-bar / Now Bar chip icon for the weather. */
+    private int iconForCode(int code, double wind, boolean isDay) {
+        if (code == 95) return R.drawable.ic_storm;
+        if (code >= 80 && code <= 82) return R.drawable.ic_rain;
+        if (code >= 61 && code <= 65) return R.drawable.ic_rain;
+        if (code >= 51 && code <= 55) return R.drawable.ic_rain;
+        if (wind >= 30) return R.drawable.ic_wind;
+        if (code == 45 || code == 48) return R.drawable.ic_fog;
+        if (code >= 71 && code <= 75) return R.drawable.ic_snow;
+        if (code == 3) return R.drawable.ic_cloud;
+        if (code == 1 || code == 2) return isDay ? R.drawable.ic_partly_day : R.drawable.ic_partly_night;
+        if (code == 0) return isDay ? R.drawable.ic_sun : R.drawable.ic_moon_star;
+        return R.drawable.ic_cloud;
+    }
+
+    private String englishWord(int code, double wind, boolean isDay) {
+        if (code == 95) return "Storm";
+        if (code >= 80 && code <= 82) return "Showers";
+        if (code >= 61 && code <= 65) return "Rain";
+        if (code >= 51 && code <= 55) return "Drizzle";
+        if (wind >= 30) return "Windy";
+        if (code == 45 || code == 48) return "Foggy";
+        if (code >= 71 && code <= 75) return "Snow";
+        if (code == 3) return "Overcast";
+        if (code == 1 || code == 2) return "Cloudy";
+        if (code == 0) return isDay ? "Sunny" : "Clear";
+        return "Weather";
+    }
+
+    /** Glass bubble picture. Uses the ready PNGs; night sun, fog and wind fall back to a drawn bubble. */
+    private android.graphics.Bitmap bubbleFor(String kind, boolean isDay, int tint) {
+        int res = 0;
+        switch (kind) {
+            case "cloud": res = R.drawable.bubble_cloud; break;
+            case "rain": res = R.drawable.bubble_rain; break;
+            case "storm": res = R.drawable.bubble_storm; break;
+            case "snow": res = R.drawable.bubble_snow; break;
+            case "partly": if (isDay) res = R.drawable.bubble_partly; break;
+            case "sun": res = R.drawable.bubble_sun; break;
+            default: break;
+        }
+        if (res != 0) {
+            android.graphics.Bitmap b = android.graphics.BitmapFactory.decodeResource(getResources(), res);
+            if (b != null) return b;
+        }
+        return WeatherBubble.create(kind, isDay, tint, 192);
+    }
+
+    private String kindForCode(int code, double wind, boolean isDay) {
+        if (code == 95) return "storm";
+        if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return "rain";
+        if (wind >= 30) return "wind";
+        if (code == 45 || code == 48) return "fog";
+        if (code >= 71 && code <= 75) return "snow";
+        if (code == 3) return "cloud";
+        if (code == 1 || code == 2) return "partly";
+        if (code == 0) return isDay ? "sun" : "moon";
+        return "cloud";
+    }
+
+    /** Circle color: changes with day/night and weather. */
+    private int circleColor(int code, double wind, boolean isDay) {
+        if (code == 95) return 0xFF4A3F78;
+        if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return 0xFF2F5D8A;
+        if (code >= 71 && code <= 75) return 0xFF6C8EAD;
+        if (wind >= 30) return 0xFF3E7C8C;
+        if (code == 45 || code == 48 || code == 3) return 0xFF5B6B7A;
+        if (code == 1 || code == 2) return isDay ? 0xFF4A90D9 : 0xFF3949AB;
+        return isDay ? 0xFF1E88E5 : 0xFF283593;
+    }
+
+    /** The original notification (custom colored layout). Used on every phone below Android 16. */
+    private Notification buildLegacyNotification(String city, String temp, String desc, String emoji, String theme, String tideText, String windText, String humidityText) {
         RemoteViews views = new RemoteViews(getPackageName(), R.layout.notification_layout);
         views.setTextViewText(R.id.notif_city, city);
         views.setTextViewText(R.id.notif_temp, temp);
@@ -153,27 +268,27 @@ public class WeatherNotificationService extends Service {
         views.setTextColor(R.id.notif_desc, textColor);
         views.setTextColor(R.id.notif_temp, textColor);
 
-        Intent intent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-
         StringBuilder bigText = new StringBuilder();
         bigText.append(emoji).append(" ").append(desc).append(" • ").append(temp).append("\n");
-        if (tideText != null && !tideText.isEmpty()) bigText.append("\uD83C\uDF0A ").append(tideText).append("\n");
-        if (windText != null && !windText.isEmpty()) bigText.append("\uD83D\uDCA8 ").append(windText).append("\n");
-        if (humidityText != null && !humidityText.isEmpty()) bigText.append("\uD83D\uDCA7 ").append(humidityText);
+        if (tideText != null && !tideText.isEmpty()) bigText.append("🌊 ").append(tideText).append("\n");
+        if (windText != null && !windText.isEmpty()) bigText.append("💨 ").append(windText).append("\n");
+        if (humidityText != null && !humidityText.isEmpty()) bigText.append("💧 ").append(humidityText);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setCustomContentView(views)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(bigText.toString().trim()))
                 .setOngoing(true)
-                .setContentIntent(pendingIntent)
+                .setContentIntent(openAppIntent())
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && "com.havashenas.hormozgan.REFRESH".equals(intent.getAction()) && updateTask != null) {
+            fetchAndUpdate();
+        }
         return START_STICKY;
     }
 
