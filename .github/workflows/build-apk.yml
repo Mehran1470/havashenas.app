@@ -11,10 +11,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - run: npm install
       - run: npx cap add android
       - run: npx cap sync android
+      - name: Show SDK versions
+        run: grep -E 'minSdkVersion|compileSdkVersion|targetSdkVersion' android/variables.gradle || true
       - run: npx @capacitor/assets generate --android
       - name: Add weather widget files
         run: |
@@ -23,6 +25,8 @@ jobs:
           cp widget/CityWidgetPlugin.java android/app/src/main/java/com/havashenas/hormozgan/CityWidgetPlugin.java
           cp widget/MainActivity.java android/app/src/main/java/com/havashenas/hormozgan/MainActivity.java
           cp widget/WeatherNotificationService.java android/app/src/main/java/com/havashenas/hormozgan/WeatherNotificationService.java
+          cp widget/LiveUpdateNotification.java android/app/src/main/java/com/havashenas/hormozgan/LiveUpdateNotification.java
+          cp widget/WeatherBubble.java android/app/src/main/java/com/havashenas/hormozgan/WeatherBubble.java
           cp widget/weather_widget_layout.xml android/app/src/main/res/layout/weather_widget_layout.xml
           cp widget/notification_layout.xml android/app/src/main/res/layout/notification_layout.xml
           cp widget/notification_layout_expanded.xml android/app/src/main/res/layout/notification_layout_expanded.xml
@@ -39,6 +43,8 @@ jobs:
           cp widget/ic_wind.xml android/app/src/main/res/drawable/ic_wind.xml
           cp widget/ic_snow.xml android/app/src/main/res/drawable/ic_snow.xml
           cp widget/ic_fog.xml android/app/src/main/res/drawable/ic_fog.xml
+          mkdir -p android/app/src/main/res/drawable-nodpi
+          cp widget/bubble_*.png android/app/src/main/res/drawable-nodpi/
           mkdir -p android/app/src/main/res/xml
           cp widget/weather_widget_info.xml android/app/src/main/res/xml/weather_widget_info.xml
           python3 -c "
@@ -53,7 +59,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
