@@ -127,7 +127,7 @@ public class WeatherNotificationService extends Service {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
                                 cityName, tempText, englishWord(code, wind, isDay), iconForCode(code, wind, isDay),
-                                WeatherBubble.create(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay), 192),
+                                bubbleFor(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay)),
                                 circleColor(code, wind, isDay));
                     } catch (Throwable t) {
                         notif = null;
@@ -203,6 +203,25 @@ public class WeatherNotificationService extends Service {
         if (code == 1 || code == 2) return "Cloudy";
         if (code == 0) return isDay ? "Sunny" : "Clear";
         return "Weather";
+    }
+
+    /** Glass bubble picture. Uses the ready PNGs; night sun, fog and wind fall back to a drawn bubble. */
+    private android.graphics.Bitmap bubbleFor(String kind, boolean isDay, int tint) {
+        int res = 0;
+        switch (kind) {
+            case "cloud": res = R.drawable.bubble_cloud; break;
+            case "rain": res = R.drawable.bubble_rain; break;
+            case "storm": res = R.drawable.bubble_storm; break;
+            case "snow": res = R.drawable.bubble_snow; break;
+            case "partly": if (isDay) res = R.drawable.bubble_partly; break;
+            case "sun": res = R.drawable.bubble_sun; break;
+            default: break;
+        }
+        if (res != 0) {
+            android.graphics.Bitmap b = android.graphics.BitmapFactory.decodeResource(getResources(), res);
+            if (b != null) return b;
+        }
+        return WeatherBubble.create(kind, isDay, tint, 192);
     }
 
     private String kindForCode(int code, double wind, boolean isDay) {

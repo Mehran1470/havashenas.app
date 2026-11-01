@@ -43,6 +43,8 @@ jobs:
           cp widget/ic_wind.xml android/app/src/main/res/drawable/ic_wind.xml
           cp widget/ic_snow.xml android/app/src/main/res/drawable/ic_snow.xml
           cp widget/ic_fog.xml android/app/src/main/res/drawable/ic_fog.xml
+          mkdir -p android/app/src/main/res/drawable-nodpi
+          cp widget/bubble_*.png android/app/src/main/res/drawable-nodpi/
           mkdir -p android/app/src/main/res/xml
           cp widget/weather_widget_info.xml android/app/src/main/res/xml/weather_widget_info.xml
           python3 -c "
