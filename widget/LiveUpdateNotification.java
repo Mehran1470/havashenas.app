@@ -21,14 +21,15 @@ final class LiveUpdateNotification {
     }
 
     static Notification build(Context ctx, String channelId, PendingIntent pendingIntent,
-                              String city, String temp, String word, int smallIconRes,
+                              String city, String temp, String word, String line2, int smallIconRes,
                               Bitmap bubble, int accentColor) {
         return new Notification.Builder(ctx, channelId)
                 .setSmallIcon(smallIconRes)
                 .setLargeIcon(bubble)
                 .setColor(accentColor)
                 .setContentTitle(temp + " " + word)
-                .setContentText(city)
+                .setContentText(line2)
+                .setSubText(city)
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)

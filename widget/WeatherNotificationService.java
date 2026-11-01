@@ -110,7 +110,8 @@ public class WeatherNotificationService extends Service {
             String humidityText = prefs.getString("humidity_text", "");
             try {
                 String body = httpGet("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
-                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day");
+                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"
+                        + "&hourly=precipitation_probability&forecast_hours=1&timezone=auto");
                 JSONObject json = new JSONObject(body);
                 JSONObject current = json.getJSONObject("current");
                 double temp = current.getDouble("temperature_2m");
@@ -120,13 +121,18 @@ public class WeatherNotificationService extends Service {
                 String desc = describeCode(code, wind, isDay);
                 String emoji = emojiForCode(code, wind, isDay);
                 String tempText = Math.round(temp) + "°";
+                int rainPct = 0;
+                try {
+                    rainPct = json.getJSONObject("hourly").getJSONArray("precipitation_probability").optInt(0, 0);
+                } catch (Exception ignored) { }
+                String line2 = "باد " + Math.round(wind) + " km/h  |  بارش " + rainPct + "%";
 
                 Notification notif = null;
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
                 if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
-                                cityName, tempText, englishWord(code, wind, isDay), iconForCode(code, wind, isDay),
+                                cityName, tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
                                 bubbleFor(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay)),
                                 circleColor(code, wind, isDay));
                     } catch (Throwable t) {
