@@ -129,7 +129,7 @@ public class WeatherNotificationService extends Service {
 
                 Notification notif = null;
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
-                if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
+                if (Build.VERSION.SDK_INT >= 36) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
                                 cityName, tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
@@ -144,9 +144,33 @@ public class WeatherNotificationService extends Service {
                 }
                 NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 manager.notify(NOTIF_ID, notif);
+                showDiagnosis(notif);
             } catch (Exception e) {
             }
         }).start();
+    }
+
+    private static boolean diagShown = false;
+
+    /** Android 16+: one short message after start saying whether the system promoted the notification. */
+    private void showDiagnosis(Notification sent) {
+        if (diagShown || Build.VERSION.SDK_INT < 36) return;
+        diagShown = true;
+        String allowed = "?", promotable = "?", promoted = "?";
+        try {
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            allowed = nm.canPostPromotedNotifications() ? "Y" : "N";
+            try {
+                promotable = ((Boolean) Notification.class.getMethod("hasPromotableCharacteristics").invoke(sent)) ? "Y" : "N";
+            } catch (Throwable ignored) { }
+            Thread.sleep(800);
+            int flag = Notification.class.getField("FLAG_PROMOTED_ONGOING").getInt(null);
+            for (android.service.notification.StatusBarNotification sbn : nm.getActiveNotifications()) {
+                if (sbn.getId() == NOTIF_ID) promoted = (sbn.getNotification().flags & flag) != 0 ? "Y" : "N";
+            }
+        } catch (Throwable ignored) { }
+        final String msg = "NowBar allowed=" + allowed + " promotable=" + promotable + " promoted=" + promoted;
+        handler.post(() -> android.widget.Toast.makeText(getApplicationContext(), msg, android.widget.Toast.LENGTH_LONG).show());
     }
 
     private PendingIntent openAppIntent() {
