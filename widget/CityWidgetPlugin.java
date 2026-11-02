@@ -77,6 +77,7 @@ public class CityWidgetPlugin extends Plugin {
         Boolean showWind = call.getBoolean("showWind");
         Boolean showTide = call.getBoolean("showTide");
         Boolean notifEnabled = call.getBoolean("notifEnabled");
+        Boolean liveNotif = call.getBoolean("liveNotif");
         Integer opacity = call.getInt("opacity");
 
         Context context = getContext();
@@ -87,13 +88,33 @@ public class CityWidgetPlugin extends Plugin {
         if (showWind != null) editor.putBoolean("show_wind", showWind);
         if (showTide != null) editor.putBoolean("show_tide", showTide);
         if (notifEnabled != null) editor.putBoolean("notif_enabled", notifEnabled);
+        if (liveNotif != null) editor.putBoolean("live_enabled", liveNotif);
         if (opacity != null) editor.putInt("opacity", opacity);
         editor.apply();
 
         broadcastWidgetUpdate(context);
+        if (liveNotif != null) {
+            Intent svc = new Intent(context, WeatherNotificationService.class);
+            svc.setAction("com.havashenas.hormozgan.REFRESH");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                context.startForegroundService(svc);
+            } else {
+                context.startService(svc);
+            }
+        }
 
         JSObject ret = new JSObject();
         ret.put("success", true);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void getLiveState(PluginCall call) {
+        SharedPreferences prefs = getContext().getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+        JSObject ret = new JSObject();
+        ret.put("supported", android.os.Build.VERSION.SDK_INT >= 36);
+        ret.put("enabled", prefs.getBoolean("live_enabled", true));
+        ret.put("active", prefs.getBoolean("live_active", false));
         call.resolve(ret);
     }
 

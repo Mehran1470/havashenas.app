@@ -27,7 +27,8 @@ import java.net.URL;
 
 public class WeatherNotificationService extends Service {
 
-    private static final String CHANNEL_ID = "havashenas_weather_channel";
+    private static final String CHANNEL_ID = "havashenas_weather_nobadge";
+    private static final String OLD_CHANNEL_ID = "havashenas_weather_channel";
     private static final int NOTIF_ID = 501;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateTask;
@@ -59,7 +60,9 @@ public class WeatherNotificationService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, "وضعیت هوا", NotificationManager.IMPORTANCE_LOW);
             channel.setDescription("نمایش دائمی دمای هوا");
+            channel.setShowBadge(false);
             NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.deleteNotificationChannel(OLD_CHANNEL_ID);
             manager.createNotificationChannel(channel);
         }
     }
@@ -129,7 +132,7 @@ public class WeatherNotificationService extends Service {
 
                 Notification notif = null;
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
-                if (Build.VERSION.SDK_INT >= 36 && LiveUpdateNotification.canPromote(this)) {
+                if (Build.VERSION.SDK_INT >= 36 && prefs.getBoolean("live_enabled", true)) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
                                 cityName, tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
@@ -144,9 +147,31 @@ public class WeatherNotificationService extends Service {
                 }
                 NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 manager.notify(NOTIF_ID, notif);
+                checkPromoted();
             } catch (Exception e) {
             }
         }).start();
+    }
+
+    private static boolean liveToastShown = false;
+
+    /** Android 16+: when the system really promotes the notification, say so once and remember it. */
+    private void checkPromoted() {
+        if (Build.VERSION.SDK_INT < 36) return;
+        boolean promoted = false;
+        try {
+            Thread.sleep(800);
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            int flag = Notification.class.getField("FLAG_PROMOTED_ONGOING").getInt(null);
+            for (android.service.notification.StatusBarNotification sbn : nm.getActiveNotifications()) {
+                if (sbn.getId() == NOTIF_ID) promoted = (sbn.getNotification().flags & flag) != 0;
+            }
+        } catch (Throwable ignored) { }
+        getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE).edit().putBoolean("live_active", promoted).apply();
+        if (promoted && !liveToastShown) {
+            liveToastShown = true;
+            handler.post(() -> android.widget.Toast.makeText(getApplicationContext(), "Live Notification فعال شد", android.widget.Toast.LENGTH_SHORT).show());
+        }
     }
 
     private PendingIntent openAppIntent() {
@@ -211,30 +236,28 @@ public class WeatherNotificationService extends Service {
         return "Weather";
     }
 
-    /** Glass bubble picture. Uses the ready PNGs; night sun, fog and wind fall back to a drawn bubble. */
+    /** Glass bubble picture: always one of the ready PNGs. */
     private android.graphics.Bitmap bubbleFor(String kind, boolean isDay, int tint) {
-        int res = 0;
+        int res;
         switch (kind) {
-            case "cloud": res = R.drawable.bubble_cloud; break;
             case "rain": res = R.drawable.bubble_rain; break;
             case "storm": res = R.drawable.bubble_storm; break;
             case "snow": res = R.drawable.bubble_snow; break;
-            case "partly": if (isDay) res = R.drawable.bubble_partly; break;
-            case "sun": res = R.drawable.bubble_sun; break;
-            default: break;
+            case "wind": res = R.drawable.bubble_wind; break;
+            case "sun": res = isDay ? R.drawable.bubble_sun : R.drawable.bubble_moon; break;
+            case "moon": res = R.drawable.bubble_moon; break;
+            case "partly": res = isDay ? R.drawable.bubble_partly : R.drawable.bubble_cloud; break;
+            default: res = R.drawable.bubble_cloud; break;
         }
-        if (res != 0) {
-            android.graphics.Bitmap b = android.graphics.BitmapFactory.decodeResource(getResources(), res);
-            if (b != null) return b;
-        }
-        return WeatherBubble.create(kind, isDay, tint, 192);
+        android.graphics.Bitmap b = android.graphics.BitmapFactory.decodeResource(getResources(), res);
+        return b != null ? b : WeatherBubble.create(kind, isDay, tint, 192);
     }
 
     private String kindForCode(int code, double wind, boolean isDay) {
         if (code == 95) return "storm";
         if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return "rain";
         if (wind >= 30) return "wind";
-        if (code == 45 || code == 48) return "fog";
+        if (code == 45 || code == 48) return "cloud";
         if (code >= 71 && code <= 75) return "snow";
         if (code == 3) return "cloud";
         if (code == 1 || code == 2) return "partly";
@@ -279,6 +302,7 @@ public class WeatherNotificationService extends Service {
                 .setCustomContentView(views)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(bigText.toString().trim()))
                 .setOngoing(true)
+                .setNumber(0)
                 .setContentIntent(openAppIntent())
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .build();

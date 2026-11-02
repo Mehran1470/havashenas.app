@@ -3,7 +3,11 @@ package com.havashenas.hormozgan;
 import android.Manifest;
 import android.view.View;
 import android.content.Intent;
+import android.app.NotificationManager;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.provider.Settings;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -47,6 +51,32 @@ public class MainActivity extends BridgeActivity {
             startForegroundService(serviceIntent);
         } else {
             startService(serviceIntent);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        askForLiveUpdatesOnce();
+    }
+
+    /** Android 16+: once, open the page where the user can switch on Live updates (Now Bar) for this app. */
+    private void askForLiveUpdatesOnce() {
+        if (Build.VERSION.SDK_INT < 36) return;
+        try {
+            SharedPreferences prefs = getSharedPreferences("havashenas_widget", Context.MODE_PRIVATE);
+            if (prefs.getBoolean("asked_live_updates", false)) return;
+            NotificationManager nm = getSystemService(NotificationManager.class);
+            if (nm == null || nm.canPostPromotedNotifications()) return;
+            prefs.edit().putBoolean("asked_live_updates", true).apply();
+            String action = Settings.ACTION_APP_NOTIFICATION_SETTINGS;
+            try {
+                action = (String) Settings.class.getField("ACTION_MANAGE_APP_PROMOTED_NOTIFICATIONS").get(null);
+            } catch (Throwable ignored) {
+            }
+            Intent i = new Intent(action).putExtra(Settings.EXTRA_APP_PACKAGE, getPackageName());
+            startActivity(i);
+        } catch (Throwable ignored) {
         }
     }
 }
