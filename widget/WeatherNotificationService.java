@@ -276,7 +276,8 @@ public class WeatherNotificationService extends Service {
             case "wind": res = R.drawable.bubble_wind; break;
             case "sun": res = isDay ? R.drawable.bubble_sun : R.drawable.bubble_moon; break;
             case "moon": res = R.drawable.bubble_moon; break;
-            case "partly": res = isDay ? R.drawable.bubble_partly : R.drawable.bubble_cloud; break;
+            case "partly": res = isDay ? R.drawable.bubble_partly : R.drawable.bubble_partly_night; break;
+            case "fog": res = R.drawable.bubble_fog; break;
             default: res = R.drawable.bubble_cloud; break;
         }
         android.graphics.Bitmap b = android.graphics.BitmapFactory.decodeResource(getResources(), res);
@@ -287,7 +288,7 @@ public class WeatherNotificationService extends Service {
         if (code == 95) return "storm";
         if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return "rain";
         if (wind >= 30) return "wind";
-        if (code == 45 || code == 48) return "cloud";
+        if (code == 45 || code == 48) return "fog";
         if (code >= 71 && code <= 75) return "snow";
         if (code == 3) return "cloud";
         if (code == 1 || code == 2) return "partly";
