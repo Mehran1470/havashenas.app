@@ -685,7 +685,7 @@ function resize(){
   canvas.style.width=W+'px';canvas.style.height=H+'px';
   ctx.setTransform(DPR,0,0,DPR,0,0);
 }
-window.addEventListener('resize',resize);resize();
+window.addEventListener('resize',()=>{resize();if(!bgRaf&&typeof drawBg==='function'&&!document.hidden)drawBg();});resize();
 
 // mode: 'sunny' | 'cloudy' | 'rain' | 'snow' | 'night'  (night overrides everything else)
 let mode=(new Date().getHours()>=6&&new Date().getHours()<19)?'sunny':'night';
@@ -867,6 +867,7 @@ function drawWindStreaks(){
   });
 }
 function drawBg(){
+  bgRaf=0;ctx.beginPath();
   drawSky();
   if(mode==='night'){drawStars();drawMoon();drawAmbientParticles(1,1,'rgba(130,210,255,');}
   else if(mode==='sunny'){drawSun();drawAmbientParticles(.5,.2,'rgba(255,255,255,');}
@@ -874,8 +875,18 @@ function drawBg(){
   if(mode==='rain')drawRain();
   if(mode==='snow')drawSnow();
   if(mode==='sunny'||mode==='cloudy')drawWindStreaks();
-  requestAnimationFrame(drawBg);
+  scheduleBg();
 }
+const reducedMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let bgRaf=0;
+function scheduleBg(){
+  if(reducedMotion||document.hidden){bgRaf=0;return;}
+  bgRaf=requestAnimationFrame(drawBg);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){if(bgRaf)cancelAnimationFrame(bgRaf);bgRaf=0;}
+  else if(!bgRaf){drawBg();}
+});
 drawBg();
 
 /* ===== WEATHER & TIDE DATA ===== */
@@ -977,40 +988,46 @@ function getIcon(code,isDay){
 function wText(code){if(code===0)return"صاف";if([1,2].includes(code))return"کمی ابری";if(code===3)return"ابری";if([45,48].includes(code))return"مهآلود";if([51,53,55,56,57].includes(code))return"نمنم";if([61,63,65,66,67,80,81,82].includes(code))return"بارانی";if([71,73,75,77].includes(code))return"برفی";if([95,96,99].includes(code))return"رعدوبرق";return"نامشخص";}
 function advWText(code){if(code===0)return"Clear";if([1,2].includes(code))return"Partly Cloudy";if(code===3)return"Cloudy";if([45,48].includes(code))return"Foggy";if([51,53,55,56,57].includes(code))return"Light Rain";if([61,63,65,66,67,80,81,82].includes(code))return"Rainy";if([71,73,75,77].includes(code))return"Snowy";if([95,96,99].includes(code))return"Thunderstorm";return"Unknown";}
 const CITY_NAMES_EN={"بندرعباس":"Bandar Abbas","هرمز":"Hormuz","قشم":"Qeshm","میناب":"Minab","کیش":"Kish","بستک":"Bastak","حاجیآباد":"Hajiabad","رودان":"Rudan","جاسک":"Jask","ابوموسی":"Abu Musa"};
-function faDate(iso){return new Date(iso).toLocaleDateString("fa-IR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});}
-function timeFa(iso){return new Date(iso).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",hour12:false});}
-function dayName(iso){return new Date(iso).toLocaleDateString("fa-IR",{weekday:"long"});}
+const APP_TZ='Asia/Tehran',TZ_OFF='+03:30';
+const faDigits=s=>String(s).replace(/\d/g,d=>'۰۱۲۳۴۵۶۷۸۹'[d]);
+/* API times (timezone=auto) are city-local strings without offset: read them as text, never via device timezone */
+function localDay(iso){return new Date(String(iso).slice(0,10)+'T12:00:00Z');}
+function faDate(iso){return localDay(iso).toLocaleDateString("fa-IR",{weekday:"long",year:"numeric",month:"long",day:"numeric",timeZone:'UTC'});}
+function timeFa(iso){return faDigits(String(iso).slice(11,16));}
+function dayName(iso){return localDay(iso).toLocaleDateString("fa-IR",{weekday:"long",timeZone:'UTC'});}
+/* absolute instants (tides, ODB) shown in Iran time */
+function timeFaDate(d){return d.toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:APP_TZ});}
+function tehranYMD(d){return new Intl.DateTimeFormat('en-CA',{timeZone:APP_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d);}
+function tehranDayStart(d){return new Date(tehranYMD(d)+'T00:00:00'+TZ_OFF);}
+function isSameTehranDay(a,b){return tehranYMD(a)===tehranYMD(b);}
 
 /* ===== MOON & TIDE CALCULATIONS ===== */
 function moonPhase(date){
-  const y=date.getFullYear(),m=date.getMonth()+1,d=date.getDate();
-  let yy=y-Math.floor((12-m)/10);
-  let mm=m+9;if(mm>12)mm-=12;
-  let k=1+Math.floor((yy*365.25+yy/400-yy/100+Math.floor(mm*30.6)+d-694039.09)/29.53058867);
-  let age=(k*29.53058867+694039.09)-(yy*365.25+yy/400-yy/100+Math.floor(mm*30.6)+d);
-  age=29.53058867-age;
-  const p=age/29.53058867;
-  let name="بدر";
+  const SYN=29.530588853;
+  const jd=date.getTime()/86400000+2440587.5;
+  let age=((jd-2451550.1)%SYN+SYN)%SYN;
+  const p=age/SYN;
+  let name;
   if(p<0.03||p>0.97)name="ماه نو";
   else if(p<0.22)name="هلال";
   else if(p<0.28)name="ربع اول";
-  else if(p<0.47)name="تقریباً بدر";
+  else if(p<0.47)name="رو به بدر";
   else if(p<0.53)name="بدر";
-  else if(p<0.72)name="تقریباً بدر";
+  else if(p<0.72)name="پس از بدر";
   else if(p<0.78)name="ربع آخر";
   else name="هلال کاهشی";
   return{age:age.toFixed(1),percent:Math.round((1-Math.cos(p*Math.PI*2))/2*100),name:name,phase:p};
 }
 
 async function fetchTidesAt(lat,lon){
-  const api=`https://marine-api.open-meteo.com/v1/marine?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&hourly=sea_level_height_msl&past_hours=48&forecast_days=4&timezone=auto&cell_selection=sea`;
-  const res=await fetchWithBackoff(api,{cache:'no-store'});
-  if(!res.ok)return null;
+  const api=`https://marine-api.open-meteo.com/v1/marine?latitude=${encodeURIComponent(lat)}&longitude=${encodeURIComponent(lon)}&hourly=sea_level_height_msl&past_hours=48&forecast_days=4&timezone=GMT&cell_selection=sea`;
+  const res=await fetchWithBackoff(api,{cache:'no-store'},1);
+  if(!res.ok){if(res.status===429||res.status>=500)throw new Error('tide api '+res.status);return null;}
   const data=await res.json();
   const times=data.hourly?.time||[];
   const heights=data.hourly?.sea_level_height_msl||[];
   if(times.length<5||heights.length!==times.length)return null;
-  const points=times.map((iso,i)=>({time:new Date(iso),height:heights[i]==null?NaN:Number(heights[i])})).filter(x=>Number.isFinite(x.height));
+  const points=times.map((iso,i)=>({time:new Date(iso+'Z'),height:heights[i]==null?NaN:Number(heights[i])})).filter(x=>Number.isFinite(x.height));
   if(points.length<10)return null;
   return points;
 }
@@ -1019,6 +1036,7 @@ async function fetchTidesAt(lat,lon){
 // model's ~8km grid can miss usable sea data right at the shore. If the first try
 // comes back empty we nudge the coordinate a bit toward open water and retry.
 async function fetchTidesRobust(lat,lon){
+  // a network/server error (thrown) stops the whole search; only "no sea data here" tries the next nudge
   const offsets=[[0,0],[0.15,0.15],[-0.15,0.15],[0.15,-0.15],[-0.15,-0.15],[0.3,0],[0,0.3],[-0.3,0]];
   for(const [dLat,dLon] of offsets){
     const pts=await fetchTidesAt(lat+dLat,lon+dLon);
@@ -1028,14 +1046,30 @@ async function fetchTidesRobust(lat,lon){
 }
 
 const TIDE_TTL_MS=20*60*1000;
-let tideCoordCache={};
+let tideCoordCache={},tideFailUntil={};
+function storeGet(k){try{return JSON.parse(localStorage.getItem(k)||'null');}catch(e){return null;}}
+function storeSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 async function fetchTides(date,lat,lon){
   const key=lat+','+lon;
-  const points=await cachedAsync(tideCoordCache,key,TIDE_TTL_MS,async()=>{
-    const pts=await fetchTidesRobust(lat,lon);
-    if(!pts)throw new Error('Tide data unavailable');
-    return pts;
-  });
+  const skey='havashenas_tide_'+key;
+  let points;
+  if(tideFailUntil[key]>Date.now()&&!tideCoordCache[key]?.data)throw new Error('Tide data unavailable (cooling down)');
+  try{
+    points=await cachedAsync(tideCoordCache,key,TIDE_TTL_MS,async()=>{
+      const pts=await fetchTidesRobust(lat,lon);
+      if(!pts)throw new Error('Tide data unavailable');
+      return pts;
+    });
+    storeSet(skey,{ts:Date.now(),p:points.map(x=>[x.time.getTime(),x.height])});
+  }catch(err){
+    const saved=storeGet(skey);
+    if(saved&&saved.p&&Date.now()-saved.ts<48*3600*1000){
+      points=saved.p.map(a=>({time:new Date(a[0]),height:a[1]}));
+    }else{
+      tideFailUntil[key]=Date.now()+10*60*1000;
+      throw err;
+    }
+  }
 
   const events=[];
   for(let i=1;i<points.length-1;i++){
@@ -1046,8 +1080,8 @@ async function fetchTides(date,lat,lon){
   events.sort((a,b)=>a.time-b.time);
 
   const now=new Date();
-  const targetStart=new Date(date);targetStart.setHours(0,0,0,0);
-  const targetEnd=new Date(targetStart);targetEnd.setDate(targetEnd.getDate()+1);
+  const targetStart=tehranDayStart(date);
+  const targetEnd=new Date(targetStart.getTime()+24*3600*1000);
   const dayEvents=events.filter(e=>e.time>=targetStart&&e.time<targetEnd);
 
   let currentState='';
@@ -1102,15 +1136,16 @@ function showSkeleton(){
   document.getElementById("daysGrid").innerHTML=Array(7).fill('<div class="day-card"><div class="skeleton" style="height:18px;margin-bottom:8px"></div><div class="skeleton" style="height:36px;width:36px;margin:8px auto"></div><div class="skeleton" style="height:14px"></div></div>').join('');
 }
 
-let selectedDayIndex=-1;
+let selectedDayIndex=-1,detailSeq=0;
 function closeDayDetail(){document.getElementById('dayDetail').classList.remove('show');document.querySelectorAll('.day-card').forEach(c=>c.classList.remove('active'));selectedDayIndex=-1;}
 
 function showDayDetail(idx){
   if(!lastWeatherData)return;
   const d=lastWeatherData.daily;
   const names=["امروز","فردا","پسفردا","روز چهارم","روز پنجم","روز ششم","روز هفتم"];
-  const dayDate=new Date(d.time[idx]);
+  const dayDate=new Date(d.time[idx]+'T12:00:00'+TZ_OFF);
   const mp=moonPhase(dayDate);
+  const token=++detailSeq;
   const city=citySelect.value;
   const c=cities[city];
   document.getElementById('detailTitle').textContent=names[idx]+' • '+dayName(d.time[idx]);
@@ -1119,7 +1154,7 @@ function showDayDetail(idx){
     {icon:'❄',label:'کمینه دما',val:Math.round(d.temperature_2m_min[idx])+'°'},
     {icon:'💧',label:'احتمال بارش',val:(d.precipitation_probability_max[idx]??0)+'%'},
     {icon:'🌧',label:'بارش',val:(d.precipitation_sum[idx]??0).toFixed(1)+' mm'},
-    {icon:'💨',label:'باد',val:Math.round(lastWeatherData.hourly.wind_speed_10m[idx*24]??0)+' km/h'},
+    {icon:'💨',label:'بیشینه باد',val:Math.round(d.wind_speed_10m_max?.[idx]??Math.max(0,...(lastWeatherData.hourly.wind_speed_10m||[]).slice(idx*24,idx*24+24).filter(Number.isFinite)))+' km/h'},
     {icon:'🌅',label:'طلوع',val:timeFa(d.sunrise[idx])},
     {icon:'🌇',label:'غروب',val:timeFa(d.sunset[idx])},
     {icon:'🌙',label:'ماه ('+mp.name+')',val:mp.percent+'%'}
@@ -1129,14 +1164,15 @@ function showDayDetail(idx){
   document.querySelectorAll('.day-card').forEach((c,i)=>c.classList.toggle('active',i===idx));
   selectedDayIndex=idx;
   calculateTides(dayDate,c.lat,c.lon).then(tides=>{
+    if(token!==detailSeq||selectedDayIndex!==idx)return;
     if(!tides.tides.length)return;
-    const tideHtml=tides.tides.map(t=>`<div style="font-size:11px;margin-top:2px">${t.label}: ${timeFa(t.time.toISOString())} (${t.height}m)</div>`).join('');
+    const tideHtml=tides.tides.map(t=>`<div style="font-size:11px;margin-top:2px">${t.label}: ${timeFaDate(t.time)} (${t.height}m)</div>`).join('');
     items.push({icon:'🌊',label:'جزر و مد',val:tideHtml});
     document.getElementById('detailGrid').innerHTML=items.map(it=>`<div class="detail-item"><span>${it.icon} ${it.label}</span><b>${it.val}</b></div>`).join('');
   }).catch(()=>{});
 }
 async function fetchTidesODB(lat,lon,dateObj){
-  const dateStr=dateObj.toISOString().slice(0,10);
+  const dateStr=tehranYMD(dateObj);
   const url=`https://eco.odb.ntu.edu.tw/api/tide/forecast?lon=${lon}&lat=${lat}&date=${dateStr}&tz=%2B03:30`;
   const res=await fetchWithBackoff(url,{cache:'no-store'});
   if(!res.ok)return null;
@@ -1144,7 +1180,7 @@ async function fetchTidesODB(lat,lon,dateObj){
   const day=data.days&&data.days[0];
   if(!day||!day.tide||!day.tide.length)return null;
   return day.tide.map(t=>({
-    time:new Date(t.time),
+    time:new Date(/([zZ]|[+-]\d\d:?\d\d)$/.test(String(t.time))?t.time:String(t.time).replace(' ','T')+TZ_OFF),
     type:t.phen==='HIGH'?'high':'low',
     label:t.phen==='HIGH'?'مد':'جزر',
     height:(t.height/100).toFixed(2)
@@ -1157,7 +1193,7 @@ async function applyMaxAccuracyTide(lat,lon){
   const s=getSettings();
   const badge=document.getElementById('tideAccuracyBadge');
   if(!s.maxAccuracy||!lastTideData){badge.style.display='none';return;}
-  const dayKey=new Date().toISOString().slice(0,10);
+  const dayKey=tehranYMD(new Date());
   const key=lat.toFixed(2)+','+lon.toFixed(2)+','+dayKey;
   try{
     const odbToday=await cachedAsync(maxAccuracyTideStore,key,MAX_ACCURACY_TIDE_TTL,async()=>{
@@ -1172,6 +1208,8 @@ async function applyMaxAccuracyTide(lat,lon){
       const sameType=odbToday.filter(o=>o.type===omEvent.type);
       if(!sameType.length)return omEvent;
       const nearest=sameType.reduce((a,b)=>Math.abs(a.time-omEvent.time)<Math.abs(b.time-omEvent.time)?a:b);
+      // only blend two readings of the SAME tide (within 3 h); otherwise keep the model value
+      if(Math.abs(nearest.time-omEvent.time)>3*3600*1000)return omEvent;
       const avgTime=new Date((omEvent.time.getTime()+nearest.time.getTime())/2);
       const avgHeight=((parseFloat(omEvent.height)+parseFloat(nearest.height))/2).toFixed(2);
       return {time:avgTime,type:omEvent.type,label:omEvent.label,height:avgHeight};
@@ -1179,11 +1217,11 @@ async function applyMaxAccuracyTide(lat,lon){
     const mergedHigh=averageWithNearest(lastTideData.today.nextHigh);
     const mergedLow=averageWithNearest(lastTideData.today.nextLow);
     if(mergedHigh){
-      document.getElementById('nextHighTime').textContent=timeFa(mergedHigh.time.toISOString());
+      document.getElementById('nextHighTime').textContent=timeFaDate(mergedHigh.time);
       document.getElementById('nextHighHeight').textContent='ارتفاع: '+mergedHigh.height+' متر';
     }
     if(mergedLow){
-      document.getElementById('nextLowTime').textContent=timeFa(mergedLow.time.toISOString());
+      document.getElementById('nextLowTime').textContent=timeFaDate(mergedLow.time);
       document.getElementById('nextLowHeight').textContent='ارتفاع: '+mergedLow.height+' متر';
     }
     badge.style.display='';
@@ -1219,11 +1257,11 @@ async function renderTideSection(){
   document.getElementById('tideCurrentTime').textContent='پیشبینی مدل دریایی • به وقت محلی';
 
   if(today.nextHigh){
-    document.getElementById('nextHighTime').textContent=timeFa(today.nextHigh.time.toISOString());
+    document.getElementById('nextHighTime').textContent=timeFaDate(today.nextHigh.time);
     document.getElementById('nextHighHeight').textContent='ارتفاع: '+today.nextHigh.height+' متر';
   }else{document.getElementById('nextHighTime').textContent='—';document.getElementById('nextHighHeight').textContent='—';}
   if(today.nextLow){
-    document.getElementById('nextLowTime').textContent=timeFa(today.nextLow.time.toISOString());
+    document.getElementById('nextLowTime').textContent=timeFaDate(today.nextLow.time);
     document.getElementById('nextLowHeight').textContent='ارتفاع: '+today.nextLow.height+' متر';
   }else{document.getElementById('nextLowTime').textContent='—';document.getElementById('nextLowHeight').textContent='—';}
 
@@ -1238,7 +1276,7 @@ async function renderTideSection(){
   const allTides=[...today.tides,...tmrTides.tides].filter(t=>t.time>new Date(now.getTime()-2*60*60*1000)&&t.time<new Date(now.getTime()+48*60*60*1000)).sort((a,b)=>a.time-b.time).slice(0,8);
   let tableHTML=`<div class="tide-table-row tide-table-header"><div>تاریخ</div><div>نوع</div><div>زمان</div><div>ارتفاع</div></div>`;
   allTides.forEach(t=>{
-    const isToday=t.time.toDateString()===now.toDateString();
+    const isToday=isSameTehranDay(t.time,now);
     tableHTML+=`<div class="tide-table-row"><div>${isToday?'امروز':'فردا'}</div><div><span class="tide-badge ${t.type}">${t.label}</span></div><div>${timeFa(t.time.toISOString())}</div><div>${t.height} متر</div></div>`;
   });
   document.getElementById('tideTable').innerHTML=tableHTML;
@@ -1255,7 +1293,11 @@ async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
   try{
     const {avgTemp,avgHumidity,avgWind}=await cachedAsync(maxAccuracyWeatherStore,key,MAX_ACCURACY_WEATHER_TTL,async()=>{
       const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m&models=${MAX_ACCURACY_MODELS.join(',')}&timezone=auto&forecast_days=1`;
-      const res=await fetchWithBackoff(url,{cache:'no-store'});
+      let res=await fetchWithBackoff(url,{cache:'no-store'});
+      if(!res.ok){
+        // one unsupported model makes the whole request fail: retry with the two most reliable ones
+        res=await fetchWithBackoff(url.replace(/models=[^&]*/,'models=ecmwf_ifs025,gfs_seamless'),{cache:'no-store'},1);
+      }
       if(!res.ok)throw new Error('multi-model fetch failed');
       const d=await res.json();
       const hourly=d.hourly;
@@ -1284,8 +1326,20 @@ async function applyMaxAccuracyIfEnabled(lat,lon,refTimeIso){
 const WEATHER_TTL_MS=10*60*1000;
 const weatherStore={};
 async function fetchWeatherData(city,c){
+  const skey='havashenas_wx_'+city;
+  try{
+    const d=await fetchWeatherLive(city,c);
+    storeSet(skey,{ts:Date.now(),d});
+    return d;
+  }catch(err){
+    const saved=storeGet(skey);
+    if(saved&&saved.d){saved.d._stale=saved.ts;return saved.d;}
+    throw err;
+  }
+}
+async function fetchWeatherLive(city,c){
   return cachedAsync(weatherStore,city,WEATHER_TTL_MS,async()=>{
-    const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,visibility,is_day&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset&timezone=auto&forecast_days=7`;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,visibility,is_day&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,wind_speed_10m_max,precipitation_sum,precipitation_probability_max,weather_code,sunrise,sunset&timezone=auto&forecast_days=7`;
     const res=await fetchWithBackoff(url,{cache:"no-store"});
     if(!res.ok)throw new Error("API error: "+res.status);
     return res.json();
@@ -1294,7 +1348,6 @@ async function fetchWeatherData(city,c){
 async function loadWeather(){
   const city=citySelect.value,c=cities[city];if(!c){setStatus("شهر نامعتبر",true);return;}
   if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){window.Capacitor.Plugins.CityWidget.setCity({name:city,lat:c.lat,lon:c.lon});}
-  if(window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget){setTimeout(()=>{const tideTxt=document.getElementById('tideNext')?document.getElementById('tideNext').textContent:'';const stateEl=document.getElementById('tideStateText');const stateTxt=stateEl?stateEl.textContent:'';const fullTxt=(stateTxt?stateTxt+' • ':'')+tideTxt;const windEl=document.getElementById('wind');window.Capacitor.Plugins.CityWidget.setTideInfo({tideText:fullTxt,windText:windEl?windEl.textContent:'',rainText:''});},3000);}
   const isFreshCityView=!lastWeatherData||lastWeatherData._cityKey!==city;
   if(isFreshCityView)showSkeleton();
   setStatus("در حال دریافت دادههای زنده از Open-Meteo...");
@@ -1316,11 +1369,12 @@ async function loadWeather(){
     document.getElementById("tempFeelsMini").textContent="احساس "+Math.round(cur.apparent_temperature)+"°";
     document.getElementById("weatherIcon").innerHTML=getHeroIcon(cur.weather_code,cur.is_day!==0);
     setWeatherMode(cur.weather_code,cur.is_day!==0);
+    if(!bgRaf&&!document.hidden)drawBg();
     setWindSpeed(cur.wind_speed_10m);
     document.getElementById("humidity").textContent=Math.round(cur.relative_humidity_2m)+"%";
     document.getElementById("wind").textContent=Math.round(cur.wind_speed_10m)+" km/h";
     applyMaxAccuracyIfEnabled(c.lat,c.lon,cur.time).catch(()=>{});
-    const hIdx=d.hourly.time.findIndex(t=>t>=cur.time);
+    const hIdx=Math.max(0,d.hourly.time.findIndex(t=>t>=cur.time));
     document.getElementById("rainProb").textContent=(d.hourly.precipitation_probability[hIdx]??0)+"%";
     document.getElementById("visibility").textContent=cur.visibility!=null?(Math.round(cur.visibility/100)/10)+" km":"—";
     document.getElementById("sunrise").textContent=timeFa(d.daily.sunrise[0]);
@@ -1339,7 +1393,7 @@ async function loadWeather(){
       const w=d.hourly.wind_speed_10m[i]??0;
       hourHTML+=`<div class="hour-card ${isNow?'now':''}">
         <div class="hour-time">${isNow?'اکنون':timeFa(d.hourly.time[i])}</div>
-        <div class="hour-ico">${getIcon(d.hourly.weather_code[i],1).replace('width="100" height="100"','width="32" height="32"')}</div>
+        <div class="hour-ico">${getIcon(d.hourly.weather_code[i],1).replace('<svg viewBox','<svg width="32" height="32" viewBox')}</div>
         <div class="hour-temp">${Math.round(t)}°</div>
         ${r>0?`<div class="hour-rain">💧 ${r}%</div>`:''}
         <div class="hour-wind">💨 ${Math.round(w)} km/h</div>
@@ -1367,7 +1421,10 @@ async function loadWeather(){
     // If a day was selected, refresh its detail
     if(selectedDayIndex>=0) showDayDetail(selectedDayIndex);
 
-    setStatus("✅ دادههای زنده فعال است. اطلاعات از Open-Meteo دریافت میشود.");
+    if(d._stale){
+      const t=new Date(d._stale);
+      setStatus("📴 آفلاین — آخرین دادهٔ ذخیره‌شده ("+faDigits(String(t.getHours()).padStart(2,'0')+':'+String(t.getMinutes()).padStart(2,'0'))+")",true);
+    }else setStatus("✅ دادههای زنده فعال است. اطلاعات از Open-Meteo دریافت میشود.");
     updateMap();
   }catch(e){
     console.error(e);
@@ -1376,9 +1433,24 @@ async function loadWeather(){
   }
 }
 
+let lastTidePush='';
+function pushTideInfo(){
+  const P=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.CityWidget;
+  if(!P||!P.setTideInfo)return;
+  const tideTxt=(document.getElementById('tideNext')||{}).textContent||'';
+  const stateTxt=(document.getElementById('tideStateText')||{}).textContent||'';
+  const windTxt=(document.getElementById('wind')||{}).textContent||'';
+  if(tideTxt.includes('—')||!tideTxt)return;
+  const payload={tideText:(stateTxt?stateTxt+' • ':'')+tideTxt,windText:windTxt.includes('—')?'':windTxt,rainText:''};
+  const sig=JSON.stringify(payload);
+  if(sig===lastTidePush)return;
+  lastTidePush=sig;
+  P.setTideInfo(payload);
+}
 async function refreshTide(){
   try{
     await renderTideSection();
+    pushTideInfo();
   }catch(tideErr){
     console.error("Tide render error:",tideErr);
     if(!lastTideData){
@@ -1561,7 +1633,7 @@ function getLocation(){
 }
 async function reverseGeocode(lat,lon){
   try{
-    const res=await fetchWithBackoff(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,{cache:'no-store'},1);
+    const res=await fetchWithBackoff(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${Number(lat).toFixed(2)}&longitude=${Number(lon).toFixed(2)}&localityLanguage=en`,{cache:'no-store'},1);
     if(!res.ok)return null;
     const d=await res.json();
     return d.city||d.locality||d.principalSubdivision||null;
@@ -1907,7 +1979,7 @@ const ADV_TITLE_ICONS={
   sunset:`<svg ${ADV_TI}><path d="M3 18h18M7 18a5 5 0 0 1 10 0M12 3v3M9 4l3 3 3-3"/></svg>`
 };
 function advTitle(icon,text){return `<div class="adv-card-title">${ADV_TITLE_ICONS[icon]}<span>${text}</span></div>`;}
-function advClock(t){const d=new Date(t);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function advClock(t){return String(t).slice(11,16);}
 
 function renderAdvanced(data){
   const cur=data.weather.current,daily=data.weather.daily,hourly=data.weather.hourly;
@@ -2224,7 +2296,7 @@ function openTempSheet(hourly,start,cur){
     for(let i=1;i<N;i++){const xa=X(i-1),ya=Y(arr[i-1]),xb=X(i),yb=Y(arr[i]),cx=(xa+xb)/2;d+=` C${f(cx)},${f(ya)} ${f(cx)},${f(yb)} ${f(xb)},${f(yb)}`;}
     return d;
   };
-  const hh=i=>String(new Date(times[i]).getHours()).padStart(2,'0');
+  const hh=i=>String(times[i]).slice(11,13);
   /* night bands */
   let bands='';
   for(let i=0;i<N;){
@@ -2285,7 +2357,7 @@ function openTempSheet(hourly,start,cur){
   const plot=document.getElementById('shPlot'),svgEl=document.getElementById('shSvg');
   const cur_=document.getElementById('shCur'),line=document.getElementById('shLine'),dot=document.getElementById('shDot'),dotF=document.getElementById('shDotF');
   const lbl=document.getElementById('shLbl'),tEl=document.getElementById('shTemp'),fEl=document.getElementById('shFeels');
-  const day0=new Date(times[0]).getDate();
+  const day0=String(times[0]).slice(8,10);
   const show=ev=>{
     const r=svgEl.getBoundingClientRect();
     const vx=(ev.clientX-r.left)/r.width*VW;
@@ -2294,8 +2366,7 @@ function openTempSheet(hourly,start,cur){
     line.setAttribute('x1',f(X(i)));line.setAttribute('x2',f(X(i)));
     dot.setAttribute('cx',f(X(i)));dot.setAttribute('cy',f(Y(temps[i])));
     if(dotF){dotF.setAttribute('cx',f(X(i)));dotF.setAttribute('cy',f(Y(feels[i])));}
-    const d=new Date(times[i]);
-    lbl.textContent=(i===0?'Now':(d.getDate()!==day0?d.toLocaleDateString('en-US',{weekday:'short'})+' ':'')+hh(i)+':00');
+    lbl.textContent=(i===0?'Now':(String(times[i]).slice(8,10)!==day0?localDay(times[i]).toLocaleDateString('en-US',{weekday:'short',timeZone:'UTC'})+' ':'')+hh(i)+':00');
     tEl.textContent=Math.round(i===0&&cur?cur.temperature_2m:temps[i])+'°';
     fEl.textContent=feelsTxt(i);
   };
@@ -2333,6 +2404,8 @@ loadWeather();
 refreshTide();
 setInterval(loadWeather,10*60*1000);
 setInterval(refreshTide,20*60*1000);
+window.addEventListener('online',()=>{loadWeather();refreshTide();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){loadWeather();refreshTide();}});
 
 if("serviceWorker" in navigator){
   window.addEventListener("load",()=>{

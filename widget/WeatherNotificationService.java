@@ -112,9 +112,34 @@ public class WeatherNotificationService extends Service {
             String windText = prefs.getString("wind_text", "");
             String humidityText = prefs.getString("humidity_text", "");
             try {
-                String body = httpGet("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
-                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"
-                        + "&hourly=precipitation_probability&forecast_hours=1&timezone=auto");
+                String body = null;
+                boolean stale = false;
+                String url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
+                        + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day"
+                        + "&hourly=precipitation_probability&forecast_hours=3&timezone=auto";
+                Exception lastErr = null;
+                for (int attempt = 0; attempt < 3 && body == null; attempt++) {
+                    try {
+                        body = httpGet(url);
+                    } catch (Exception e) {
+                        lastErr = e;
+                        try { Thread.sleep(2000L * (attempt + 1)); } catch (InterruptedException ie) { break; }
+                    }
+                }
+                String cacheKey = "last_weather_" + lat + "_" + lon;
+                if (body != null) {
+                    prefs.edit().putString(cacheKey, body).putLong(cacheKey + "_ts", System.currentTimeMillis()).apply();
+                } else {
+                    // offline / server down: keep showing the last good reading (up to 3 hours old)
+                    long ts = prefs.getLong(cacheKey + "_ts", 0);
+                    String saved = prefs.getString(cacheKey, null);
+                    if (saved == null || System.currentTimeMillis() - ts > 3L * 3600 * 1000) {
+                        if (lastErr != null) throw lastErr;
+                        return;
+                    }
+                    body = saved;
+                    stale = true;
+                }
                 JSONObject json = new JSONObject(body);
                 JSONObject current = json.getJSONObject("current");
                 double temp = current.getDouble("temperature_2m");
@@ -126,16 +151,20 @@ public class WeatherNotificationService extends Service {
                 String tempText = Math.round(temp) + "°";
                 int rainPct = 0;
                 try {
-                    rainPct = json.getJSONObject("hourly").getJSONArray("precipitation_probability").optInt(0, 0);
+                    org.json.JSONArray rain = json.getJSONObject("hourly").getJSONArray("precipitation_probability");
+                    for (int i = 0; i < rain.length(); i++) rainPct = Math.max(rainPct, rain.optInt(i, 0));
                 } catch (Exception ignored) { }
-                String line2 = "باد " + Math.round(wind) + " km/h  |  بارش " + rainPct + "%";
+                double feels = current.optDouble("apparent_temperature", Double.NaN);
+                String line2 = "Wind " + Math.round(wind) + " km/h \u00B7 Rain " + rainPct + "%"
+                        + (Double.isNaN(feels) ? "" : " \u00B7 Feels " + Math.round(feels) + "\u00B0")
+                        + (stale ? " \u00B7 Offline" : "");
 
                 Notification notif = null;
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
                 if (Build.VERSION.SDK_INT >= 36 && prefs.getBoolean("live_enabled", true)) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
-                                cityName, tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
+                                englishCity(cityName), tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
                                 bubbleFor(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay)),
                                 circleColor(code, wind, isDay));
                     } catch (Throwable t) {
@@ -158,9 +187,13 @@ public class WeatherNotificationService extends Service {
     /** Android 16+: when the system really promotes the notification, say so once and remember it. */
     private void checkPromoted() {
         if (Build.VERSION.SDK_INT < 36) return;
+        // give the system a moment to promote, without blocking a thread
+        handler.postDelayed(() -> new Thread(this::checkPromotedNow).start(), 800);
+    }
+
+    private void checkPromotedNow() {
         boolean promoted = false;
         try {
-            Thread.sleep(800);
             NotificationManager nm = getSystemService(NotificationManager.class);
             int flag = Notification.class.getField("FLAG_PROMOTED_ONGOING").getInt(null);
             for (android.service.notification.StatusBarNotification sbn : nm.getActiveNotifications()) {
@@ -222,6 +255,24 @@ public class WeatherNotificationService extends Service {
         return R.drawable.ic_cloud;
     }
 
+    private String englishCity(String fa) {
+        String en;
+        switch (fa) {
+            case "بندرعباس": en = "Bandar Abbas"; break;
+            case "هرمز": en = "Hormoz"; break;
+            case "قشم": en = "Qeshm"; break;
+            case "میناب": en = "Minab"; break;
+            case "کیش": en = "Kish"; break;
+            case "بستک": en = "Bastak"; break;
+            case "حاجیآباد": case "حاجی‌آباد": en = "Hajiabad"; break;
+            case "رودان": en = "Rudan"; break;
+            case "جاسک": en = "Jask"; break;
+            case "ابوموسی": en = "Abu Musa"; break;
+            default: return fa;
+        }
+        return en;
+    }
+
     private String englishWord(int code, double wind, boolean isDay) {
         if (code == 95) return "Storm";
         if (code >= 80 && code <= 82) return "Showers";
@@ -246,7 +297,8 @@ public class WeatherNotificationService extends Service {
             case "wind": res = R.drawable.bubble_wind; break;
             case "sun": res = isDay ? R.drawable.bubble_sun : R.drawable.bubble_moon; break;
             case "moon": res = R.drawable.bubble_moon; break;
-            case "partly": res = isDay ? R.drawable.bubble_partly : R.drawable.bubble_cloud; break;
+            case "partly": res = isDay ? R.drawable.bubble_partly : R.drawable.bubble_partly_night; break;
+            case "fog": res = R.drawable.bubble_fog; break;
             default: res = R.drawable.bubble_cloud; break;
         }
         android.graphics.Bitmap b = android.graphics.BitmapFactory.decodeResource(getResources(), res);
@@ -257,7 +309,7 @@ public class WeatherNotificationService extends Service {
         if (code == 95) return "storm";
         if (code >= 51 && code <= 65 || code >= 80 && code <= 82) return "rain";
         if (wind >= 30) return "wind";
-        if (code == 45 || code == 48) return "cloud";
+        if (code == 45 || code == 48) return "fog";
         if (code >= 71 && code <= 75) return "snow";
         if (code == 3) return "cloud";
         if (code == 1 || code == 2) return "partly";
