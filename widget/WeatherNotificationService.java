@@ -115,7 +115,7 @@ public class WeatherNotificationService extends Service {
                 String body = null;
                 boolean stale = false;
                 String url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
-                        + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"
+                        + "&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day"
                         + "&hourly=precipitation_probability&forecast_hours=3&timezone=auto";
                 Exception lastErr = null;
                 for (int attempt = 0; attempt < 3 && body == null; attempt++) {
@@ -154,14 +154,17 @@ public class WeatherNotificationService extends Service {
                     org.json.JSONArray rain = json.getJSONObject("hourly").getJSONArray("precipitation_probability");
                     for (int i = 0; i < rain.length(); i++) rainPct = Math.max(rainPct, rain.optInt(i, 0));
                 } catch (Exception ignored) { }
-                String line2 = "باد " + Math.round(wind) + " km/h  |  بارش " + rainPct + "%" + (stale ? "  (آفلاین)" : "");
+                double feels = current.optDouble("apparent_temperature", Double.NaN);
+                String line2 = "Wind " + Math.round(wind) + " km/h \u00B7 Rain " + rainPct + "%"
+                        + (Double.isNaN(feels) ? "" : " \u00B7 Feels " + Math.round(feels) + "\u00B0")
+                        + (stale ? " \u00B7 Offline" : "");
 
                 Notification notif = null;
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
                 if (Build.VERSION.SDK_INT >= 36 && prefs.getBoolean("live_enabled", true)) {
                     try {
                         notif = LiveUpdateNotification.build(this, CHANNEL_ID, openAppIntent(),
-                                cityName, tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
+                                englishCity(cityName), tempText, englishWord(code, wind, isDay), line2, iconForCode(code, wind, isDay),
                                 bubbleFor(kindForCode(code, wind, isDay), isDay, circleColor(code, wind, isDay)),
                                 circleColor(code, wind, isDay));
                     } catch (Throwable t) {
@@ -250,6 +253,24 @@ public class WeatherNotificationService extends Service {
         if (code == 1 || code == 2) return isDay ? R.drawable.ic_partly_day : R.drawable.ic_partly_night;
         if (code == 0) return isDay ? R.drawable.ic_sun : R.drawable.ic_moon_star;
         return R.drawable.ic_cloud;
+    }
+
+    private String englishCity(String fa) {
+        String en;
+        switch (fa) {
+            case "بندرعباس": en = "Bandar Abbas"; break;
+            case "هرمز": en = "Hormoz"; break;
+            case "قشم": en = "Qeshm"; break;
+            case "میناب": en = "Minab"; break;
+            case "کیش": en = "Kish"; break;
+            case "بستک": en = "Bastak"; break;
+            case "حاجیآباد": case "حاجی‌آباد": en = "Hajiabad"; break;
+            case "رودان": en = "Rudan"; break;
+            case "جاسک": en = "Jask"; break;
+            case "ابوموسی": en = "Abu Musa"; break;
+            default: return fa;
+        }
+        return en + " \u00B7 Hormozgan";
     }
 
     private String englishWord(int code, double wind, boolean isDay) {
