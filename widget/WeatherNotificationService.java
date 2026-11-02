@@ -112,9 +112,34 @@ public class WeatherNotificationService extends Service {
             String windText = prefs.getString("wind_text", "");
             String humidityText = prefs.getString("humidity_text", "");
             try {
-                String body = httpGet("https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
+                String body = null;
+                boolean stale = false;
+                String url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon
                         + "&current=temperature_2m,weather_code,wind_speed_10m,is_day"
-                        + "&hourly=precipitation_probability&forecast_hours=1&timezone=auto");
+                        + "&hourly=precipitation_probability&forecast_hours=3&timezone=auto";
+                Exception lastErr = null;
+                for (int attempt = 0; attempt < 3 && body == null; attempt++) {
+                    try {
+                        body = httpGet(url);
+                    } catch (Exception e) {
+                        lastErr = e;
+                        try { Thread.sleep(2000L * (attempt + 1)); } catch (InterruptedException ie) { break; }
+                    }
+                }
+                String cacheKey = "last_weather_" + lat + "_" + lon;
+                if (body != null) {
+                    prefs.edit().putString(cacheKey, body).putLong(cacheKey + "_ts", System.currentTimeMillis()).apply();
+                } else {
+                    // offline / server down: keep showing the last good reading (up to 3 hours old)
+                    long ts = prefs.getLong(cacheKey + "_ts", 0);
+                    String saved = prefs.getString(cacheKey, null);
+                    if (saved == null || System.currentTimeMillis() - ts > 3L * 3600 * 1000) {
+                        if (lastErr != null) throw lastErr;
+                        return;
+                    }
+                    body = saved;
+                    stale = true;
+                }
                 JSONObject json = new JSONObject(body);
                 JSONObject current = json.getJSONObject("current");
                 double temp = current.getDouble("temperature_2m");
@@ -126,9 +151,10 @@ public class WeatherNotificationService extends Service {
                 String tempText = Math.round(temp) + "°";
                 int rainPct = 0;
                 try {
-                    rainPct = json.getJSONObject("hourly").getJSONArray("precipitation_probability").optInt(0, 0);
+                    org.json.JSONArray rain = json.getJSONObject("hourly").getJSONArray("precipitation_probability");
+                    for (int i = 0; i < rain.length(); i++) rainPct = Math.max(rainPct, rain.optInt(i, 0));
                 } catch (Exception ignored) { }
-                String line2 = "باد " + Math.round(wind) + " km/h  |  بارش " + rainPct + "%";
+                String line2 = "باد " + Math.round(wind) + " km/h  |  بارش " + rainPct + "%" + (stale ? "  (آفلاین)" : "");
 
                 Notification notif = null;
                 // Android 16+: Live Update (Now Bar on One UI 8). Everything else keeps the old notification.
@@ -158,9 +184,13 @@ public class WeatherNotificationService extends Service {
     /** Android 16+: when the system really promotes the notification, say so once and remember it. */
     private void checkPromoted() {
         if (Build.VERSION.SDK_INT < 36) return;
+        // give the system a moment to promote, without blocking a thread
+        handler.postDelayed(() -> new Thread(this::checkPromotedNow).start(), 800);
+    }
+
+    private void checkPromotedNow() {
         boolean promoted = false;
         try {
-            Thread.sleep(800);
             NotificationManager nm = getSystemService(NotificationManager.class);
             int flag = Notification.class.getField("FLAG_PROMOTED_ONGOING").getInt(null);
             for (android.service.notification.StatusBarNotification sbn : nm.getActiveNotifications()) {
