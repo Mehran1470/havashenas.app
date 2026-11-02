@@ -270,7 +270,7 @@ public class WeatherNotificationService extends Service {
             case "ابوموسی": en = "Abu Musa"; break;
             default: return fa;
         }
-        return en + " \u00B7 Hormozgan";
+        return en;
     }
 
     private String englishWord(int code, double wind, boolean isDay) {
