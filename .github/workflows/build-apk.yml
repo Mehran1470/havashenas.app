@@ -50,7 +50,7 @@ jobs:
           cp widget/WeatherDetailWidgetProvider.java android/app/src/main/java/com/havashenas/hormozgan/WeatherDetailWidgetProvider.java
           cp widget/card_widget_layout.xml android/app/src/main/res/layout/card_widget_layout.xml
           cp widget/detail_widget_layout.xml android/app/src/main/res/layout/detail_widget_layout.xml
-          for f in card_bg_sun card_bg_blue card_bg_gray card_bg_night detail_bg tile_bg ic_card_sun ic_card_partly ic_card_cloud ic_card_rain ic_detail_rain ic_tile_wind ic_tile_drop ic_tile_wave; do
+          for f in card_bg_sun card_bg_blue card_bg_gray card_bg_night detail_bg tile_bg ic_card_sun ic_card_partly ic_card_cloud ic_card_moon ic_card_rain ic_detail_rain ic_tile_wind ic_tile_drop ic_tile_wave; do
             cp widget/$f.xml android/app/src/main/res/drawable/$f.xml
           done
           mkdir -p android/app/src/main/res/xml

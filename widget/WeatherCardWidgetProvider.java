@@ -56,7 +56,7 @@ public class WeatherCardWidgetProvider extends AppWidgetProvider {
                 } else if (cat == WeatherFetcher.CAT_SUN) {
                     icon = R.drawable.ic_card_sun;
                 } else if (cat == WeatherFetcher.CAT_NIGHT) {
-                    icon = R.drawable.ic_moon_star;
+                    icon = R.drawable.ic_card_moon;
                 } else if (cat == WeatherFetcher.CAT_RAIN) {
                     icon = r.code >= 51 ? R.drawable.ic_card_rain : R.drawable.ic_card_cloud;
                 } else {
