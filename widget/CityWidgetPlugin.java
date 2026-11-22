@@ -16,12 +16,20 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 public class CityWidgetPlugin extends Plugin {
 
     private void broadcastWidgetUpdate(Context context) {
-        Intent intent = new Intent(context, WeatherWidgetProvider.class);
-        intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+        Class<?>[] providers = new Class<?>[]{
+                WeatherWidgetProvider.class,
+                WeatherCardWidgetProvider.class,
+                WeatherDetailWidgetProvider.class
+        };
         AppWidgetManager widgetManager = AppWidgetManager.getInstance(context);
-        int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, WeatherWidgetProvider.class));
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
-        context.sendBroadcast(intent);
+        for (Class<?> provider : providers) {
+            Intent intent = new Intent(context, provider);
+            intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+            int[] ids = widgetManager.getAppWidgetIds(new ComponentName(context, provider));
+            if (ids == null || ids.length == 0) continue;
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids);
+            context.sendBroadcast(intent);
+        }
     }
 
     @PluginMethod
