@@ -41,7 +41,7 @@ public class WeatherDetailWidgetProvider extends AppWidgetProvider {
                 views.setTextViewText(R.id.detail_city, cityName);
                 views.setTextViewText(R.id.detail_desc, r.ok ? WeatherFetcher.describe(r.code, r.wind, r.isDay) : "—");
                 views.setTextViewText(R.id.detail_temp, r.ok ? r.temp + "°" : "—");
-                views.setTextViewText(R.id.detail_feels, r.ok ? "احساس " + r.feels + "°" : "");
+                views.setTextViewText(R.id.detail_feels, r.ok ? "احساس \u202A" + r.feels + "°\u202C" : "");
                 views.setTextViewText(R.id.detail_wind_value, r.ok ? r.wind + " km/h" : "—");
                 views.setTextViewText(R.id.detail_humidity_value, r.ok ? r.humidity + "%" : "—");
                 views.setTextViewText(R.id.detail_tide_value, (tideText == null || tideText.isEmpty()) ? "—" : tideText);
@@ -50,7 +50,7 @@ public class WeatherDetailWidgetProvider extends AppWidgetProvider {
                 int icon;
                 if (!r.ok) icon = R.drawable.ic_card_cloud;
                 else if (r.code >= 51) icon = R.drawable.ic_detail_rain;
-                else if (!r.isDay) icon = R.drawable.ic_moon_star;
+                else if (!r.isDay) icon = R.drawable.ic_card_moon;
                 else if (r.code == 0) icon = R.drawable.ic_card_sun;
                 else if (r.code == 3 || r.code == 45 || r.code == 48) icon = R.drawable.ic_card_cloud;
                 else icon = R.drawable.ic_card_partly;
